@@ -1,0 +1,9 @@
+/.ipynb_checkpoints
+/predict.py
+/pyimagesearch
+/train.py
+/__pycache__
+/dataset
+/preparations/Batch1
+/preparations/indata_tif
+/preparations/Segmentations(NIFTI)
