@@ -11,6 +11,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import threading
 
+
 # Initalize the seed for the possibility to repeat the result
 seed = 42
 np.random.seed = seed
@@ -86,13 +87,6 @@ X_test = np.array(X_test)
 Y_train = np.array(Y_train)
 Y_test = np.array(Y_test)
 
-# Define a PyTorch DataLoader for training and testing datasets
-train_dataset = TensorDataset(torch.Tensor(X_train).unsqueeze(1), torch.Tensor(Y_train).unsqueeze(1))
-test_dataset = TensorDataset(torch.Tensor(X_test).unsqueeze(1), torch.Tensor(Y_test).unsqueeze(1))
-
-# Define DataLoader instances for train and test sets
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
 # b = random.randint(0, len(X_train))
 # image_index = b
@@ -100,6 +94,7 @@ test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 # plt.show()
 # imshow(np.squeeze(Y_train[image_index]))
 # plt.show()
+
 
 # Define the U-Net architecture
 class UNet(nn.Module):
@@ -195,6 +190,7 @@ class UNet(nn.Module):
         
         return out
 
+
 # Get the device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -204,22 +200,6 @@ print("Model created.")
 
 # Print the model summary
 print(model)
-
-# Create a custom dataloader class
-class CustomDataLoader(threading.Thread):
-    def __init__(self, loader):
-        super().__init__()
-        self.loader = loader
-    
-    def run(self):
-        for inputs, labels in self.loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
 
 # Create the model
 model = UNet()
@@ -240,6 +220,7 @@ train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 print("Loaders created.")
 
+
 # Training loop
 epochs = 5
 print("." * 100)
@@ -249,25 +230,24 @@ for epoch in range(epochs):
     i = 0
     threads = []
 
-    for batch in train_loader:
+    for inputs, labels in train_loader:
         if i % 32 == 0:
             print(".", end="")
         i += 1
 
-        # Start a new thread for data loading and training
-        thread = CustomDataLoader(batch)
-        thread.start()
-        threads.append(thread)
-
-    # Wait for all threads to finish
-    for thread in threads:
-        thread.join()
-    
+        inputs, labels = inputs.to(device), labels.to(device)
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+        
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
 
 # Saving the model's state dictionary
-torch.save(model.state_dict(), 'model_for_nuclei.pth')
+torch.save(model.state_dict(), 'model_for_vasc.pth')
 
 # Validation and prediction
 model.eval()  # Set the model to evaluation mode
