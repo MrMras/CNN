@@ -1,6 +1,5 @@
 import config
 import cv2
-import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 import os

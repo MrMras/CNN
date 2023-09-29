@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-import matplotlib.pyplot as plt
+import threading
 
 # Initalize the seed for the possibility to repeat the result
 seed = 42
@@ -195,11 +195,31 @@ class UNet(nn.Module):
         
         return out
 
-# Instantiate the model
-model = UNet()
+# Get the device
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Create the model
+model = UNet().to(device)
+print("Model created.")
 
 # Print the model summary
 print(model)
+
+# Create a custom dataloader class
+class CustomDataLoader(threading.Thread):
+    def __init__(self, loader):
+        super().__init__()
+        self.loader = loader
+    
+    def run(self):
+        for inputs, labels in self.loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
 
 # Create the model
 model = UNet()
@@ -211,8 +231,8 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
 # Add a channel dimension (1 channel)
-X_train_tensor = torch.Tensor(X_train).unsqueeze(1)  
-Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1)
+X_train_tensor = torch.Tensor(X_train).unsqueeze(1).to(device)  
+Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
 print("Unsqueezed.")
 
 # Create a DataLoader for training data
@@ -227,16 +247,21 @@ for epoch in range(epochs):
     model.train()
     running_loss = 0.0
     i = 0
-    for inputs, labels in train_loader:
+    threads = []
+
+    for batch in train_loader:
         if i % 32 == 0:
             print(".", end="")
         i += 1
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
+
+        # Start a new thread for data loading and training
+        thread = CustomDataLoader(batch)
+        thread.start()
+        threads.append(thread)
+
+    # Wait for all threads to finish
+    for thread in threads:
+        thread.join()
     
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
