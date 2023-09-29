@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-import threading
+from tqdm import tqdm
 
 
 # Initalize the seed for the possibility to repeat the result
@@ -223,18 +223,14 @@ print("Loaders created.")
 
 # Training loop
 epochs = 5
-print("." * 100)
 for epoch in range(epochs):
     model.train()
     running_loss = 0.0
     i = 0
     threads = []
 
-    for inputs, labels in train_loader:
-        if i % 32 == 0:
-            print(".", end="")
-        i += 1
-
+    # Wrap train_loader with tqdm for a progress bar
+    for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -245,7 +241,6 @@ for epoch in range(epochs):
         
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
-
 # Saving the model's state dictionary
 torch.save(model.state_dict(), 'model_for_vasc.pth')
 
