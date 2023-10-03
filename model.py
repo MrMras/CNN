@@ -57,29 +57,29 @@ Y_test = []
 
 # Load the data
 print('Loading training images...')
-for item in train_items_X:
+for item in tqdm(train_items_X, desc="Loading Training Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     X_train.append(img / 255)
 
 print('Loading test images...')
-for item in test_items_X:
+for item in tqdm(test_items_X, desc="Loading Test Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     X_test.append(img / 255)
 
 print('Loading training masks...')
-for item in train_items_Y:
+for item in tqdm(train_items_Y, desc="Loading Training Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     Y_train.append(img / 255)
 
 print('Loading test masks...')
-for item in test_items_Y:
+for item in tqdm(test_items_Y, desc="Loading Test Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     Y_test.append(img / 255)
-print('Done!')
+
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)

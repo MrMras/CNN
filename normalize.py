@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from tqdm import tqdm
    
 
 def findBordersHorizontal(img, border, side):
@@ -86,11 +87,13 @@ vertical = bordBottom - bordTop
 
 print("New shape: ({0}, {1})".format(vertical, horizontal))
 
-
 def cut_data(in_path, out_path, borders):
     bordTop, bordLeft = borders
     ind = 10000000
-    for x in os.listdir(in_path):
+    files = os.listdir(in_path)
+    
+    # Create a tqdm progress bar for iterating through the files
+    for x in tqdm(files, desc="Processing"):
         for i in range(vertical // config.HEIGHT):
             for j in range(horizontal // config.WIDTH):
                 cv2.imwrite(os.path.join(out_path, "img_" + str(ind) + ".png"), cv2.imread(os.path.join(in_path, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)])
