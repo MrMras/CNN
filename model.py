@@ -207,13 +207,13 @@ Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
 print("Unsqueezed.")
 
 # Create a DataLoader for training data
-train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+train_dataset = TensorDataset(X_train_tensor, Y_train_tensor).to(device)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True).to(device)
 print("Loaders created.")
 
 
 # Training loop
-epochs = 5
+epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
     model.train()
     running_loss = 0.0
