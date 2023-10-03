@@ -243,7 +243,7 @@ preds_test = []
 with torch.no_grad():
     for inputs, _ in train_loader:
         outputs = model(inputs)
-        preds_train.append(outputs.numpy())
+        preds_train.append(outputs.cpu().numpy())
 
 X_test_tensor = torch.Tensor(X_test).unsqueeze(1)
 
@@ -252,8 +252,8 @@ with torch.no_grad():
     preds_test.append(outputs.numpy())
 
 # Convert predictions to binary masks
-preds_train = (np.concatenate([pred.cpu().numpy() for pred in preds_train]) > 0.5).astype(np.uint8)
-preds_test = (np.concatenate([pred.cpu().numpy() for pred in preds_test]) > 0.5).astype(np.uint8)
+preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
+preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
 
 # Perform a sanity check on random training samples
 ix = random.randint(0, len(preds_train))
@@ -263,4 +263,3 @@ plt.imshow(Y_train[ix].squeeze(), cmap='gray')
 plt.show()
 plt.imshow(preds_train[ix].squeeze(), cmap='gray')
 plt.show()
-
