@@ -56,25 +56,21 @@ Y_train = []
 Y_test = []
 
 # Load the data
-print('Loading training images...')
 for item in tqdm(train_items_X, desc="Loading Training Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     X_train.append(img / 255)
 
-print('Loading test images...')
 for item in tqdm(test_items_X, desc="Loading Test Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     X_test.append(img / 255)
 
-print('Loading training masks...')
 for item in tqdm(train_items_Y, desc="Loading Training Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     Y_train.append(img / 255)
 
-print('Loading test masks...')
 for item in tqdm(test_items_Y, desc="Loading Test Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
@@ -198,13 +194,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = UNet().to(device)
-print("Model created.")
-
-# Print the model summary
-print(model)
-
-# Create the model
-model = UNet()
 print("Model created.")
 
 # Define loss function and optimizer
