@@ -177,6 +177,8 @@ class UNet(nn.Module):
         self.out_conv = nn.Conv2d(16, 1, 1)
         self.sigmoid = nn.Sigmoid()
 
+        self.to(device)
+
     def forward(self, x):
         # Encoder
         enc_features = self.encoder(x)
