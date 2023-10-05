@@ -207,8 +207,8 @@ Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
 print("Unsqueezed.")
 
 # Create a DataLoader for training data
-train_dataset = TensorDataset(X_train_tensor, Y_train_tensor).to(device)
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True).to(device)
+train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
 
 
@@ -245,7 +245,7 @@ with torch.no_grad():
         outputs = model(inputs)
         preds_train.append(outputs.cpu().numpy())
 
-X_test_tensor = torch.Tensor(X_test).unsqueeze(1)
+X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
 
 with torch.no_grad():
     outputs = model(X_test_tensor)
