@@ -1,10 +1,14 @@
 #Import the libraries
 import torch.nn as nn
 
+from torch import device
+from torch import cuda
+
 # Define the U-Net architecture
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
+        self.device = device("cuda:0" if cuda.is_available() else "cpu")
 
         # Contraction Path (Encoder)
         self.encoder = nn.Sequential(
@@ -82,7 +86,7 @@ class UNet(nn.Module):
         self.out_conv = nn.Conv2d(16, 1, 1)
         self.sigmoid = nn.Sigmoid()
 
-        self.to(device)
+        self.to(self.device)
 
     def forward(self, x):
         # Encoder
