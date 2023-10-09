@@ -87,17 +87,22 @@ vertical = bordBottom - bordTop
 
 print("New shape: ({0}, {1})".format(vertical, horizontal))
 
-def cut_data(in_path, out_path, borders):
+def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
     bordTop, bordLeft = borders
     ind = 10000000
-    files = os.listdir(in_path)
+    files_in1 = os.listdir(in_path1)
+    files_in2 = os.listdir(in_path2)
     
     # Create a tqdm progress bar for iterating through the files
-    for x in tqdm(files, desc="Processing"):
+    for x in tqdm(files_in2, desc="Processing"):
         for i in range(vertical // config.HEIGHT):
             for j in range(horizontal // config.WIDTH):
-                cv2.imwrite(os.path.join(out_path, "img_" + str(ind) + ".png"), cv2.imread(os.path.join(in_path, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)])
-                ind += 1
+                img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
+                if np.sum(img_tmp1) != 0:
+                    img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
+                    cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
+                    cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
+                    ind += 1
 
 path_folder1 = "./preparations/data/outdata/"
 path_folder1_cut = "./dataset/outdata/"
@@ -105,6 +110,5 @@ path_folder1_cut = "./dataset/outdata/"
 path_folder2 = "./preparations/data/indata/"
 path_folder2_cut = "./dataset/indata/"
 
-cut_data(path_folder1, path_folder1_cut, (bordTop, bordLeft))
-cut_data(path_folder2, path_folder2_cut, (bordTop, bordLeft))
+cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
 
