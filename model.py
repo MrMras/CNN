@@ -154,7 +154,7 @@ X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
 
 with torch.no_grad():
     outputs = model(X_test_tensor)
-    preds_test.append(outputs.numpy())
+    preds_test.append(outputs.cpu().numpy())
 
 # Convert predictions to binary masks
 preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
