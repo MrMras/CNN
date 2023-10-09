@@ -13,7 +13,7 @@ from model_structure import UNet
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-
+nn.dis
 # Initalize the seed for the possibility to repeat the result
 seed = 42
 np.random.seed = seed
@@ -194,7 +194,8 @@ print("False Negatives (FN):", FN)
 print("Positive's accuracy:", TP / (TP + FN))
 print("Negative's accuracy:", TN / (TN + FP))
 
-print("Positive's chance of being true positive:", TP / (TP + FP))
-print("Positive's chance of being true positive:", TN / (TN + FN))
+print("Positive's recall:", TP / (TP + FP))
+print("Negative's recaLL:", TN / (TN + FN))
 
 print("Total accuracy:", (TP + TN) / (TP + TN + FP + FN))
+print("Weighted accuracy (multiplier = 4):", (4 * TP + TN) / (4 * TP + TN + FP + 4 * FN))
