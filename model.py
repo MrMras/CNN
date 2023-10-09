@@ -161,10 +161,38 @@ preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
 preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
 
 # Perform a sanity check on random training samples
-ix = random.randint(0, len(preds_train))
-plt.imshow(X_train[ix].squeeze(), cmap='gray')
-plt.show()
-plt.imshow(Y_train[ix].squeeze(), cmap='gray')
-plt.show()
-plt.imshow(preds_train[ix].squeeze(), cmap='gray')
-plt.show()
+# ix = random.randint(0, len(preds_train))
+# plt.imshow(X_train[ix].squeeze(), cmap='gray')
+# plt.show()
+# plt.imshow(Y_train[ix].squeeze(), cmap='gray')
+# plt.show()
+# plt.imshow(preds_train[ix].squeeze(), cmap='gray')
+# plt.show()
+
+# Convert predictions to binary masks
+preds_test_binary = (preds_test > 0.5).astype(np.uint8)
+
+# Flatten the ground truth masks (Y_test) and predicted masks (preds_test_binary)
+y_true = Y_test.flatten()
+y_pred = preds_test_binary.flatten()
+
+# Calculate TP, FP, TN, FN
+TP = np.sum((y_true == 1) & (y_pred == 1))
+FP = np.sum((y_true == 0) & (y_pred == 1))
+TN = np.sum((y_true == 0) & (y_pred == 0))
+FN = np.sum((y_true == 1) & (y_pred == 0))
+
+# Display TP, FP, TN, FN
+print("True Positives (TP):", TP)
+print("False Positives (FP):", FP)
+print("True Negatives (TN):", TN)
+print("False Negatives (FN):", FN)
+
+# Calculate other parameters
+print("Positive's accuracy:", TP / (TP + FN))
+print("Negative's accuracy:", TN / (TN + FP))
+
+print("Positive's chance of being true positive:", TP / (TP + FP))
+print("Positive's chance of being true positive:", TN / (TN + FN))
+
+print("Total accuracy:", (TP + TN) / (TP + TN + FP + FN))
