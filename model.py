@@ -13,7 +13,7 @@ from model_structure import UNet
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-nn.dis
+
 # Initalize the seed for the possibility to repeat the result
 seed = 42
 np.random.seed = seed
@@ -104,9 +104,10 @@ model = UNet().to(device)
 print("Model created.")
 
 # Define weights
-weights = [1, 80]
-normedWeights = [(x/sum(weights)) for x in weights]
+weights = [1, 63]
+normedWeights = [0.8, 0.2]
 print("Normalised Weights:", normedWeights)
+print(len(normedWeights))
 class_weights = torch.FloatTensor(normedWeights).to(device)
 
 # Define loss function and optimizer
@@ -135,10 +136,14 @@ for epoch in range(epochs):
 
     # Wrap train_loader with tqdm for a progress bar
     for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
-        inputs, labels = inputs.to(device), labels.to(device)
+        inputs, labels = inputs.to(device), labels.to(device).long()
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        print(outputs.size())
+        print(labels.size())
+        num_classes = torch.unique(outputs)
+        print(f"The program thinks you have {len(num_classes)} : {num_classes} classes.")
+        loss = criterion(outputs, labels.squeeze(1))
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
