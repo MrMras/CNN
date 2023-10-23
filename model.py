@@ -103,8 +103,14 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = UNet().to(device)
 print("Model created.")
 
+# Define weights
+weights = [1, 80]
+normedWeights = [(x/sum(weights)) for x in weights]
+print("Normalised Weights:", normedWeights)
+class_weights = torch.FloatTensor(normedWeights).to(device)
+
 # Define loss function and optimizer
-criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary segmentation
+criterion = nn.CrossEntropyLoss(weight=class_weights, reduction = 'mean')  # Binary Cross-Entropy Loss for binary segmentation
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
