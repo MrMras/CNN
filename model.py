@@ -33,8 +33,8 @@ TRAIN_RATIO = 0.8
 # List all items (files) in the data folder
 all_items_X = os.listdir(IN_DATA_PATH)
 l = len(all_items_X)
-all_items_X = all_items_X[0:l // 4]
-all_items_Y = os.listdir(OUT_DATA_PATH)[0:l // 4]
+all_items_X = all_items_X[0:l // 2]
+all_items_Y = os.listdir(OUT_DATA_PATH)[0:l // 2]
 
 # Shuffle the list of items randomly, without losing the connection between 
 data = list(zip(all_items_X, all_items_Y))
@@ -73,12 +73,12 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
 for item in tqdm(train_items_Y, desc="Loading Training Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
-    Y_train.append(img / 255)
+    Y_train.append(img // 255)
 
 for item in tqdm(test_items_Y, desc="Loading Test Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
-    Y_test.append(img / 255)
+    Y_test.append(img // 255)
 
 
 # Convert lists to NumPy arrays
@@ -103,15 +103,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = UNet().to(device)
 print("Model created.")
 
-# Define weights
-weights = [1, 63]
-normedWeights = [0.8, 0.2]
-print("Normalised Weights:", normedWeights)
-print(len(normedWeights))
-class_weights = torch.FloatTensor(normedWeights).to(device)
-
 # Define loss function and optimizer
-criterion = nn.CrossEntropyLoss(weight=class_weights, reduction = 'mean')  # Binary Cross-Entropy Loss for binary segmentation
+criterion = nn.BCELoss(reduction = 'none')  # Binary Cross-Entropy Loss for binary segmentation
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
@@ -124,26 +117,21 @@ print("Unsqueezed.")
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
-
-
+weights = [1, 10]
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
     model.train()
     running_loss = 0.0
     i = 0
-    threads = []
-
+    
     # Wrap train_loader with tqdm for a progress bar
     for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
-        inputs, labels = inputs.to(device), labels.to(device).long()
+        inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
-        print(outputs.size())
-        print(labels.size())
-        num_classes = torch.unique(outputs)
-        print(f"The program thinks you have {len(num_classes)} : {num_classes} classes.")
-        loss = criterion(outputs, labels.squeeze(1))
+        loss = criterion(outputs, labels)
+        loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
@@ -174,12 +162,12 @@ preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
 preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
 
 # Perform a sanity check on random training samples
-# ix = random.randint(0, len(preds_train))
-# plt.imshow(X_train[ix].squeeze(), cmap='gray')
+# ix = random.randint(0, len(preds_test))
+# plt.imshow(X_test[ix].squeeze(), cmap='gray')
 # plt.show()
-# plt.imshow(Y_train[ix].squeeze(), cmap='gray')
+# plt.imshow(Y_test[ix].squeeze(), cmap='gray')
 # plt.show()
-# plt.imshow(preds_train[ix].squeeze(), cmap='gray')
+# plt.imshow(preds_test[ix].squeeze(), cmap='gray')
 # plt.show()
 
 # Convert predictions to binary masks
