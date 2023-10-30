@@ -99,16 +99,17 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
 
     # Create a tqdm progress bar for iterating through the files
     for x in tqdm(files_in2, desc="Processing"):
+        img_tmp = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)
         for i in range(vertical_split):
             for j in range(horizontal_split):
-                img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
+                img_tmp1 = img_tmp[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
                 if np.sum(img_tmp1) != 0:
                     img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
-                    sizes.append(np.sum(img_tmp2))
+                    sizes.append(np.mean(img_tmp1))
     
     med = np.median(sizes)
     for i in tqdm(range(len(sizes)), "Writting images"):
-        if sizes(i) >= med:
+        if sizes[i] >= med:
             grid_size = vertical_split * horizontal_split
             pic_number = i // grid_size
             vertical_number = (i % grid_size) // horizontal_split
