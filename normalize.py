@@ -120,7 +120,7 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
             pic_number = j // grid_size
             vertical_number = (j % grid_size) // horizontal_split
             horizontal_number = (j % grid_size) % horizontal_split
-            img_tmp2 = cv2.imread(os.path.join(in_path1, files_in1[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+            img_tmp1 = cv2.imread(os.path.join(in_path1, files_in1[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
             img_tmp2 = cv2.imread(os.path.join(in_path2, files_in2[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
             cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
             cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
