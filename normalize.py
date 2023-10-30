@@ -92,13 +92,20 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
     ind = 10000000
     files_in1 = os.listdir(in_path1)
     files_in2 = os.listdir(in_path2)
-    
+    sizes = []
     # Create a tqdm progress bar for iterating through the files
     for x in tqdm(files_in2, desc="Processing"):
         for i in range(vertical // config.HEIGHT):
             for j in range(horizontal // config.WIDTH):
                 img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
                 if np.sum(img_tmp1) != 0:
+                    img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
+                    sizes.append(np.sum(img_tmp2))
+    for x in tqdm(files_in2, desc="Processing"):
+        for i in range(vertical // config.HEIGHT):
+            for j in range(horizontal // config.WIDTH):
+                img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
+                if np.sum(img_tmp1) >= np.median(sizes):
                     img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
                     cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
                     cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
