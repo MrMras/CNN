@@ -1,6 +1,6 @@
 
 # size of pictures
-WIDTH = 128
-HEIGHT = 128
+WIDTH = 64
+HEIGHT = 64
 
 # learning features
