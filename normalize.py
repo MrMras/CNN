@@ -93,10 +93,12 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
     files_in1 = os.listdir(in_path1)
     files_in2 = os.listdir(in_path2)
     sizes = []
+    
+    index_arr = []
 
     vertical_split = vertical // config.HEIGHT
     horizontal_split = horizontal // config.WIDTH
-
+    i = 0
     # Create a tqdm progress bar for iterating through the files
     for x in tqdm(files_in2, desc="Processing"):
         img_tmp = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)
@@ -106,15 +108,21 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
                 if np.sum(img_tmp1) != 0:
                     img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
                     sizes.append(np.mean(img_tmp1))
+                    index_arr.append(i)
+                i += 1
     
     med = np.median(sizes)
+    print(med)
     for i in tqdm(range(len(sizes)), "Writting images"):
         if sizes[i] >= med:
+            j = index_arr[i]
             grid_size = vertical_split * horizontal_split
-            pic_number = i // grid_size
-            vertical_number = (i % grid_size) // horizontal_split
-            horizontal_number = (i % grid_size) % horizontal_split
-            img_tmp1 = cv2.imread(os.path.join(in_path1, files_in1[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+
+            pic_number = j // grid_size
+            vertical_number = (j % grid_size) // horizontal_split
+            horizontal_number = (j % grid_size) % horizontal_split
+            img_tmp2 = cv2.imread(os.path.join(in_path1, files_in1[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+
             img_tmp2 = cv2.imread(os.path.join(in_path2, files_in2[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
             cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
             cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
@@ -129,6 +137,23 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
     #                 cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
     #                 cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
     #                 ind += 1
+
+# Define the directory path
+base_dir = './dataset'
+
+# Create the 'dataset' folder
+if not os.path.exists(base_dir):
+    os.makedirs(base_dir)
+
+# Create the 'indata' folder inside 'dataset'
+indata_dir = os.path.join(base_dir, 'indata')
+if not os.path.exists(indata_dir):
+    os.makedirs(indata_dir)
+
+# Create the 'outdata' folder inside 'dataset'
+outdata_dir = os.path.join(base_dir, 'outdata')
+if not os.path.exists(outdata_dir):
+    os.makedirs(outdata_dir)
 
 path_folder1 = "./preparations/data/outdata/"
 path_folder1_cut = "./dataset/outdata/"
