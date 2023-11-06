@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from copy import deepcopy
 from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
 from model_structure import UNet
 from torch.utils.data import DataLoader, TensorDataset
@@ -33,8 +34,8 @@ TRAIN_RATIO = 0.8
 # List all items (files) in the data folder
 all_items_X = os.listdir(IN_DATA_PATH)
 l = len(all_items_X)
-all_items_X = all_items_X[0:l // 2]
-all_items_Y = os.listdir(OUT_DATA_PATH)[0:l // 2]
+all_items_X = all_items_X[0:l]
+all_items_Y = os.listdir(OUT_DATA_PATH)[0:l]
 
 # Shuffle the list of items randomly, without losing the connection between 
 data = list(zip(all_items_X, all_items_Y))
@@ -86,7 +87,7 @@ X_train = np.array(X_train)
 X_test = np.array(X_test)
 Y_train = np.array(Y_train)
 Y_test = np.array(Y_test)
-
+print("X_train shape:", X_train.shape)
 
 # b = random.randint(0, len(X_train))
 # image_index = b
@@ -112,6 +113,7 @@ print("Criterion and optimizer created.")
 X_train_tensor = torch.Tensor(X_train).unsqueeze(1).to(device)  
 Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
 print("Unsqueezed.")
+print("X_train_tensor shape", X_train_tensor.shape)
 
 # Create a DataLoader for training data
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
@@ -128,6 +130,8 @@ for epoch in range(epochs):
     # Wrap train_loader with tqdm for a progress bar
     for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
         inputs, labels = inputs.to(device), labels.to(device)
+        print("inputs shape:", inputs.shape)
+        print("labels shape:", labels.shape)
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -139,7 +143,7 @@ for epoch in range(epochs):
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
 # Saving the model's state dictionary
-torch.save(model.state_dict(), 'model_for_vasc.pth')
+torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
 
 # Validation and prediction
 model.eval()  # Set the model to evaluation mode
