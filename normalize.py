@@ -98,7 +98,7 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
 
     vertical_split = vertical // config.HEIGHT
     horizontal_split = horizontal // config.WIDTH
-    i = 0
+    num = 0
     # Create a tqdm progress bar for iterating through the files
     for x in tqdm(files_in2, desc="Processing"):
         img_tmp = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)
@@ -108,8 +108,8 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
                 if np.sum(img_tmp1) != 0:
                     img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
                     sizes.append(np.mean(img_tmp1))
-                    index_arr.append(i)
-                i += 1
+                    index_arr.append(num)
+                num += 1
     
     med = np.median(sizes)
     print(med)
