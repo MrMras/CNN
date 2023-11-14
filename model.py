@@ -34,8 +34,8 @@ TRAIN_RATIO = 0.8
 # List all items (files) in the data folder
 all_items_X = os.listdir(IN_DATA_PATH)
 l = len(all_items_X)
-all_items_X = all_items_X[0:l]
-all_items_Y = os.listdir(OUT_DATA_PATH)[0:l]
+all_items_X = all_items_X[0:l * 2 // 3]
+all_items_Y = os.listdir(OUT_DATA_PATH)[0:l * 2 // 3]
 
 # Shuffle the list of items randomly, without losing the connection between 
 data = list(zip(all_items_X, all_items_Y))
@@ -130,8 +130,7 @@ for epoch in range(epochs):
     # Wrap train_loader with tqdm for a progress bar
     for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
         inputs, labels = inputs.to(device), labels.to(device)
-        print("inputs shape:", inputs.shape)
-        print("labels shape:", labels.shape)
+        
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
