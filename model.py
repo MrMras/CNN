@@ -119,7 +119,7 @@ print("X_train_tensor shape", X_train_tensor.shape)
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
-weights = [1, 10]
+weights = [1, 6]
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
