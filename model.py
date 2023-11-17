@@ -1,4 +1,5 @@
 #Import the libraries
+import cv2
 import os
 import random
 import numpy as np
@@ -16,7 +17,7 @@ from tqdm import tqdm
 
 
 # Initalize the seed for the possibility to repeat the result
-seed = 42
+seed = 43
 np.random.seed = seed
 
 # Images dimensions
@@ -69,11 +70,15 @@ for item in tqdm(train_items_X, desc="Loading Training Images"):
 for item in tqdm(test_items_X, desc="Loading Test Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
+    mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    img = img * (mask // 255)
     X_test.append(img / 255)
 
 for item in tqdm(train_items_Y, desc="Loading Training Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
+    mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    img = img * (mask // 255)    
     Y_train.append(img // 255)
 
 for item in tqdm(test_items_Y, desc="Loading Test Masks"):
@@ -119,7 +124,7 @@ print("X_train_tensor shape", X_train_tensor.shape)
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
-weights = [1, 6]
+weights = [1, 11]
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
