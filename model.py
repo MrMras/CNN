@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 
 # Initalize the seed for the possibility to repeat the result
-seed = 43
+seed = 1
 np.random.seed = seed
 
 # Images dimensions
@@ -30,20 +30,20 @@ IN_DATA_PATH = "./dataset/indata/"
 OUT_DATA_PATH = "./dataset/outdata/"
 
 # Define the ratio of data to be used for training (e.g., 80%)
-TRAIN_RATIO = 0.8
+TRAIN_RATIO = 0.75
 
 # List all items (files) in the data folder
 all_items_X = os.listdir(IN_DATA_PATH)
 l = len(all_items_X)
-all_items_X = all_items_X[0:l * 2 // 3]
-all_items_Y = os.listdir(OUT_DATA_PATH)[0:l * 2 // 3]
+all_items_X = all_items_X
+all_items_Y = os.listdir(OUT_DATA_PATH)
 
 # Shuffle the list of items randomly, without losing the connection between 
 data = list(zip(all_items_X, all_items_Y))
 np.random.shuffle(data)
 all_items_X, all_items_Y = zip(*data)
-all_items_X = np.array(all_items_X)
-all_items_Y = np.array(all_items_Y)
+all_items_X = np.array(all_items_X)[0:l // 2]
+all_items_Y = np.array(all_items_Y)[0:l // 2]
 
 # Calculate the split index based on the training ratio
 split_index = int(len(all_items_X) * TRAIN_RATIO)
@@ -66,6 +66,8 @@ for item in tqdm(train_items_X, desc="Loading Training Images"):
     path = os.path.join(IN_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     X_train.append(img / 255)
+    _, img_threshold = cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)
+    Y_train.append(img_threshold // 255)
 
 for item in tqdm(test_items_X, desc="Loading Test Images"):
     path = os.path.join(IN_DATA_PATH, item)
@@ -73,7 +75,10 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
     mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
     img = img * (mask // 255)
     X_test.append(img / 255)
+    _, img_threshold = cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)
+    Y_test.append(img_threshold // 255)
 
+'''
 for item in tqdm(train_items_Y, desc="Loading Training Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
@@ -85,7 +90,7 @@ for item in tqdm(test_items_Y, desc="Loading Test Masks"):
     path = os.path.join(OUT_DATA_PATH, item)
     img = imread(path, IMREAD_GRAYSCALE)
     Y_test.append(img // 255)
-
+'''
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
@@ -124,7 +129,7 @@ print("X_train_tensor shape", X_train_tensor.shape)
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
-weights = [1, 11]
+weights = [1, 6]
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
@@ -145,7 +150,7 @@ for epoch in range(epochs):
         running_loss += loss.item()
         
     # Print the average loss for this epoch
-    print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
+    print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}\n")
 # Saving the model's state dictionary
 torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
 
