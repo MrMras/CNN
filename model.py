@@ -11,7 +11,7 @@ import torch.optim as optim
 
 from copy import deepcopy
 from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
-from model_structure import UNet
+from model_structure_3d import UNet3D as UNet
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
