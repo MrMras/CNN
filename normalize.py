@@ -1,10 +1,10 @@
 import config
+import concurrent.futures
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 from tqdm import tqdm
-   
 
 def findBordersHorizontal(img, border, side):
     if side == "l2r":
@@ -41,6 +41,22 @@ def findBorders(img, bordLeft, bordRight, bordTop, bordBottom):
     return bordLeft, bordRight, bordTop, bordBottom
 
 
+# Function to find borders for a single image
+def find_borders(img_path):
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    return findBorders(img, img.shape[0] - 1, 0, img.shape[1] - 1, 0)
+
+# Function to merge borders from multiple images
+def merge_borders(borders):
+    bordLeft, bordRight, bordTop, bordBottom = borders[0]
+    for b in borders[1:]:
+        bordLeftTmp, bordRightTmp, bordTopTmp, bordBottomTmp = b
+        bordLeft = min(bordLeft, bordLeftTmp)
+        bordRight = max(bordRight, bordRightTmp)
+        bordTop = min(bordTop, bordTopTmp)
+        bordBottom = max(bordBottom, bordBottomTmp)
+    return bordLeft, bordRight, bordTop, bordBottom
+
 # path to the folder with already segmented data
 path_folder = "./preparations/data/outdata/"
 
@@ -48,21 +64,22 @@ path_folder = "./preparations/data/outdata/"
 dirs = os.listdir(path_folder)
 path_files = [os.path.join(path_folder, x) for x in dirs]
 
-# find borders for a stack of pictures
-fl = 0
-for x in path_files:
-    img = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
-    if fl == 0:
-        bordLeft, bordRight, bordTop, bordBottom = findBorders(img, img.shape[0] - 1, 0, img.shape[1] - 1, 0)
-        bordLeftTmp, bordRightTmp, bordTopTmp, bordBottomTmp = bordLeft, bordRight, bordTop, bordBottom
-        fl += 1
-    else:
-        bordLeftTmp, bordRightTmp, bordTopTmp, bordBottomTmp = findBorders(img, bordLeft, bordRight, bordTop, bordBottom)
+# Number of threads to use
+num_threads = min(len(path_files), 4)  # Adjust the number of threads as needed
 
-    bordLeft = min(bordLeft, bordLeftTmp)
-    bordRight = max(bordRight, bordRightTmp)
-    bordTop = min(bordTop, bordTopTmp)
-    bordBottom = max(bordBottom, bordBottomTmp)
+borders = []
+
+# Use ThreadPoolExecutor to parallelize the finding of borders
+with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+    # Submit tasks for each image to find borders concurrently
+    futures = [executor.submit(find_borders, path) for path in path_files]
+
+    # Collect results
+    for future in tqdm(concurrent.futures.as_completed(futures), "Finding borders"):
+        borders.append(future.result())
+
+# Merge borders from multiple images
+bordLeft, bordRight, bordTop, bordBottom = merge_borders(borders)
 
 print(bordLeft, bordRight, bordTop, bordBottom)
 
@@ -87,56 +104,81 @@ vertical = bordBottom - bordTop
 
 print("New shape: ({0}, {1})".format(vertical, horizontal))
 
+
 def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
+    # Extracting border coordinates
     bordTop, bordLeft = borders
-    ind = 10000000
+    # Starting index for saving images
+    ind = 1000000
+    # List of files in input paths
     files_in1 = os.listdir(in_path1)
     files_in2 = os.listdir(in_path2)
-    sizes = []
-    
-    index_arr = []
+    # List to store mean intensities of processed images
+    sizes = np.array([])
 
+    # Calculating the number of splits vertically and horizontally
     vertical_split = vertical // config.HEIGHT
     horizontal_split = horizontal // config.WIDTH
-    num = 0
-    # Create a tqdm progress bar for iterating through the files
-    for x in tqdm(files_in2, desc="Processing"):
-        img_tmp = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)
-        for i in range(vertical_split):
-            for j in range(horizontal_split):
-                img_tmp1 = img_tmp[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
-                if np.sum(img_tmp1) != 0:
-                    img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
-                    sizes.append(np.mean(img_tmp1))
-                    index_arr.append(num)
-                num += 1
+         
+    # Calculating grid size
+    grid_size = vertical_split * horizontal_split
     
-    med = np.median(sizes)
-    print(med)
+    for i in tqdm(range(vertical_split * horizontal_split), desc="Processing"):
+        # Calculate the grid indices
+        j = i % horizontal_split
+        k = i // horizontal_split
+
+        # Iterate through the image files in batches
+        for i in range(0, len(files_in2) - len(files_in2) % config.NUM_PICS, config.NUM_PICS):
+            # Initialize a list to store intensities for each image in the group
+            group_intensities = np.array([])
+
+            # Iterate through the images in the current group
+            for l, x in enumerate(files_in2[i:i+config.NUM_PICS]):
+                # Read and extract a region of interest from the image
+                img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)
+                img_tmp1 = img_tmp1[bordTop + config.HEIGHT * k: bordTop + config.HEIGHT * (k + 1), bordLeft + config.WIDTH * j: bordLeft + config.WIDTH * (j + 1)]
+                # Calculate and store the mean intensity of the current image
+                group_intensities = np.append(group_intensities, np.mean(img_tmp1))
+
+            # Calculate the average intensity for the current group
+            average_intensity = np.mean(group_intensities)
+
+            # Store the average intensity in the 'sizes' list
+            sizes = np.append(sizes, average_intensity)
+
+    # Calculating the median of the mean intensities
+    print(sizes.dtype)
+    non_zero_values = sizes[sizes != 0]
+    print("Uniques:", np.unique(sizes))
+    med = np.median(non_zero_values)
+    print("Median", med)
+    mean = np.mean(non_zero_values)
+    print("Mean", mean)
+    # print(f"length - {len(files_in1)}")
+    # print(f"length of sizes - {len(sizes)}")
+    # print(f"grid_size - {grid_size}")
+    # Iterating through each set of images and writing selected ones
     for i in tqdm(range(len(sizes)), "Writting images"):
+        # Checking if the mean intensity of the set is greater than or equal to the median
         if sizes[i] >= med:
-            j = index_arr[i]
-            grid_size = vertical_split * horizontal_split
+            # Extracting indices for the selected set of images
+            pic_number = [(i * config.NUM_PICS + j) % (len(files_in1) -  len(files_in1) % config.NUM_PICS) for j in range(config.NUM_PICS)]
+            horizontal_number = i // ((len(files_in1) -  len(files_in1) % config.NUM_PICS) // config.NUM_PICS) % horizontal_split
+            vertical_number = i // ((len(files_in1) -  len(files_in1) % config.NUM_PICS) // config.NUM_PICS) // horizontal_split
 
-            pic_number = j // grid_size
-            vertical_number = (j % grid_size) // horizontal_split
-            horizontal_number = (j % grid_size) % horizontal_split
+            # Iterating through images in the selected set and writing them
+            for k in range(config.NUM_PICS):
+                
+                # print(f"i - {i}\nk - {k}\npic_number[k] - {pic_number[k]}")
+                img_tmp1 = cv2.imread(os.path.join(in_path1, files_in1[pic_number[k]]), cv2.IMREAD_GRAYSCALE)
+                img_tmp2 = cv2.imread(os.path.join(in_path2, files_in2[pic_number[k]]), cv2.IMREAD_GRAYSCALE)
 
-            img_tmp1 = cv2.imread(os.path.join(in_path1, files_in1[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
-            img_tmp2 = cv2.imread(os.path.join(in_path2, files_in2[pic_number]), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
-            cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
-            cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
+                img_tmp1 = img_tmp1[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+                img_tmp2 = img_tmp2[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+                cv2.imwrite(os.path.join(out_path1, f"img_{ind}_{k}.png"), img_tmp1)
+                cv2.imwrite(os.path.join(out_path2, f"img_{ind}_{k}.png"), img_tmp2)
             ind += 1
-
-    # for x in tqdm(files_in2, desc="Processing"):
-    #     for i in range(vertical // config.HEIGHT):
-    #         for j in range(horizontal // config.WIDTH):
-    #             img_tmp1 = cv2.imread(os.path.join(in_path1, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
-    #             if np.sum(img_tmp1) >= np.median(sizes):
-    #                 img_tmp2 = cv2.imread(os.path.join(in_path2, x), cv2.IMREAD_GRAYSCALE)[bordTop  + config.HEIGHT * i: bordTop  + config.HEIGHT * (i + 1), bordLeft + config.WIDTH * j : bordLeft + config.WIDTH * (j + 1)]
-    #                 cv2.imwrite(os.path.join(out_path1, "img_" + str(ind) + ".png"), img_tmp1)
-    #                 cv2.imwrite(os.path.join(out_path2, "img_" + str(ind) + ".png"), img_tmp2)
-    #                 ind += 1
 
 # Define the directory path
 base_dir = './dataset'
@@ -162,4 +204,3 @@ path_folder2 = "./preparations/data/indata/"
 path_folder2_cut = "./dataset/indata/"
 
 cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
-
