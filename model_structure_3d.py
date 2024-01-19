@@ -1,6 +1,7 @@
 #Import the libraries
 import torch.nn as nn
 
+from config import NUM_PICS
 from torch import device
 from torch import cuda
 
@@ -12,7 +13,7 @@ class UNet3D(nn.Module):
 
         # Contraction Path (Encoder)
         self.encoder = nn.Sequential(
-            nn.Conv3d(1, 16, 3, padding=1),
+            nn.Conv3d(NUM_PICS, 16, 3, padding=1),
             nn.ReLU(),
             nn.Dropout3d(0.1),
             nn.Conv3d(16, 16, 3, padding=1),
