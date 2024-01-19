@@ -68,29 +68,37 @@ Y_train = []
 Y_test = []
 
 # Load the data
-for item in tqdm(train_items_X, desc="Loading Training Images"):
-    path = os.path.join(IN_DATA_PATH, item)
-    img = imread(path, IMREAD_GRAYSCALE)
-    X_train.append(img / 255)
+for array in tqdm(train_items_X, desc="Loading Training Images"):
+    X_train.append([])
+    for item in array:
+        path = os.path.join(IN_DATA_PATH, item)
+        img = imread(path, IMREAD_GRAYSCALE)
+        X_train[-1].append(img / 255)
 
 for item in tqdm(test_items_X, desc="Loading Test Images"):
-    path = os.path.join(IN_DATA_PATH, item)
-    img = imread(path, IMREAD_GRAYSCALE)
-    mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
-    img = img * (mask // 255)
-    X_test.append(img / 255)
+    X_test.append([])
+    for item in array:
+        path = os.path.join(IN_DATA_PATH, item)
+        img = imread(path, IMREAD_GRAYSCALE)
+        X_test[-1].append(img / 255)
 
 for item in tqdm(train_items_Y, desc="Loading Training Masks"):
-    path = os.path.join(OUT_DATA_PATH, item)
-    img = imread(path, IMREAD_GRAYSCALE)
-    mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
-    img = img * (mask // 255)    
-    Y_train.append(img // 255)
+    Y_train.append([])
+    for item in array:
+        path = os.path.join(OUT_DATA_PATH, item)
+        img = imread(path, IMREAD_GRAYSCALE)
+        mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+        img = img * (mask // 255)  
+        Y_train[-1].append(img / 255)
 
 for item in tqdm(test_items_Y, desc="Loading Test Masks"):
-    path = os.path.join(OUT_DATA_PATH, item)
-    img = imread(path, IMREAD_GRAYSCALE)
-    Y_test.append(img // 255)
+    Y_test.append([])
+    for item in array:
+        path = os.path.join(OUT_DATA_PATH, item)
+        img = imread(path, IMREAD_GRAYSCALE)
+        mask = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+        img = img * (mask // 255)
+        Y_test[-1].append(img / 255)
 
 
 # Convert lists to NumPy arrays
