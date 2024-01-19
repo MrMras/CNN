@@ -39,7 +39,13 @@ all_items_X = all_items_X
 all_items_Y = os.listdir(OUT_DATA_PATH)
 
 # Shuffle the list of items randomly, without losing the connection between 
+# Function for grouping the elements
+def group_by_n(lst, n):
+    return [lst[i:i+n] for i in range(0, len(lst), n)]
+all_items_X = group_by_n(all_items_X, config.NUM_PICS)[:-1]
+all_items_Y = group_by_n(all_items_Y, config.NUM_PICS)[:-1]
 data = list(zip(all_items_X, all_items_Y))
+
 np.random.shuffle(data)
 all_items_X, all_items_Y = zip(*data)
 all_items_X = np.array(all_items_X)[0:l // 2]
