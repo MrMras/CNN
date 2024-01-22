@@ -76,8 +76,7 @@ for array in tqdm(train_items_X, desc="Loading Training Images"):
         path = os.path.join(IN_DATA_PATH, item)
         img = imread(path, IMREAD_GRAYSCALE)
         X_train[-1].append(img / 255)
-        _, img_threshold = cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)
-        Y_train[-1].append(img_threshold // 255)
+        Y_train[-1].append(cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)[1] // 255)
 
 for item in tqdm(test_items_X, desc="Loading Test Images"):
     X_test.append([])
@@ -86,9 +85,9 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
         path = os.path.join(IN_DATA_PATH, item)
         img = imread(path, IMREAD_GRAYSCALE)
         X_test[-1].append(img / 255)
-        _, img_threshold = cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)
-        Y_test[-1].append(img_threshold // 255)
+        Y_test[-1].append(cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)[1] // 255)
 
+print("Images loaded")
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
@@ -107,6 +106,7 @@ print("X_train shape:", X_train.shape)
 
 # Get the device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Device:", device)
 
 # Create the model
 model = UNet().to(device)
