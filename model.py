@@ -48,8 +48,8 @@ data = list(zip(all_items_X, all_items_Y))
 
 np.random.shuffle(data)
 all_items_X, all_items_Y = zip(*data)
-all_items_X = np.array(all_items_X)[0:l // 2]
-all_items_Y = np.array(all_items_Y)[0:l // 2]
+all_items_X = np.array(all_items_X)[0:l // 4]
+all_items_Y = np.array(all_items_Y)[0:l // 4]
 
 # Calculate the split index based on the training ratio
 split_index = int(len(all_items_X) * TRAIN_RATIO)
