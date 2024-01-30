@@ -101,16 +101,10 @@ Y_test = np.array(Y_test)
 
 # Get the device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}.")
 
 # Create the model
 model = UNet().to(device)
-print("Model created.")
-
-# Print the model summary
-print(model)
-
-# Create the model
-model = UNet()
 print("Model created.")
 
 # Define loss function and optimizer
@@ -151,36 +145,25 @@ for epoch in range(epochs):
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
 # Saving the model's state dictionary
-torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
+torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc_3d.pth')
 
-# Validation and prediction
-model.eval()  # Set the model to evaluation mode
-preds_train = []
+# Set the model to evaluation mode
+model.eval()
+
+# Initialize an empty list to store the predictions
 preds_test = []
 
-with torch.no_grad():
-    for inputs, _ in train_loader:
-        outputs = model(inputs)
-        preds_train.append(outputs.cpu().numpy())
-
+# Convert X_test to a tensor and move it to the appropriate device
 X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
+print("X_test_tensor shape:", X_test_tensor.shape)
 
+# Perform forward pass without gradient computation
 with torch.no_grad():
     outputs = model(X_test_tensor)
     preds_test.append(outputs.cpu().numpy())
 
 # Convert predictions to binary masks
-preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
 preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
-
-# Perform a sanity check on random training samples
-# ix = random.randint(0, len(preds_test))
-# plt.imshow(X_test[ix].squeeze(), cmap='gray')
-# plt.show()
-# plt.imshow(Y_test[ix].squeeze(), cmap='gray')
-# plt.show()
-# plt.imshow(preds_test[ix].squeeze(), cmap='gray')
-# plt.show()
 
 # Convert predictions to binary masks
 preds_test_binary = (preds_test > 0.5).astype(np.uint8)
