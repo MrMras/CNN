@@ -46,8 +46,8 @@ data = list(zip(all_items_X, all_items_Y))
 
 np.random.shuffle(data)
 all_items_X, all_items_Y = zip(*data)
-all_items_X = np.array(all_items_X)[0:l // 4]
-all_items_Y = np.array(all_items_Y)[0:l // 4]
+all_items_X = np.array(all_items_X)[0:l // 2]
+all_items_Y = np.array(all_items_Y)[0:l // 2]
 
 # Calculate the split index based on the training ratio
 split_index = int(len(all_items_X) * TRAIN_RATIO)
@@ -98,7 +98,6 @@ Y_test = np.array(Y_test)
 # plt.show()
 # imshow(np.squeeze(Y_train[image_index]))
 # plt.show()
-
 
 # Get the device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -151,85 +150,6 @@ for epoch in range(epochs):
         
     # Print the average loss for this epoch
     print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
-# Saving the model's state dictionary
-torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
-
-# Validation and prediction
-model.eval()  # Set the model to evaluation mode
-preds_train = []
-preds_test = []
-
-with torch.no_grad():
-    for inputs, _ in train_loader:
-        outputs = model(inputs)
-        preds_train.append(outputs.cpu().numpy())
-
-X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
-
-with torch.no_grad():
-    outputs = model(X_test_tensor)
-    preds_test.append(outputs.cpu().numpy())
-
-# Convert predictions to binary masks
-preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
-preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
-
-# Perform a sanity check on random training samples
-# ix = random.randint(0, len(preds_test))
-# plt.imshow(X_test[ix].squeeze(), cmap='gray')
-# plt.show()
-# plt.imshow(Y_test[ix].squeeze(), cmap='gray')
-# plt.show()
-# plt.imshow(preds_test[ix].squeeze(), cmap='gray')
-# plt.show()
-
-
-# Get the device
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print("Device:", device)
-
-# Create the model
-model = UNet().to(device)
-print("Model created.")
-
-# Define loss function and optimizer
-criterion = nn.BCELoss(reduction = 'none')  # Binary Cross-Entropy Loss for binary segmentation
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-print("Criterion and optimizer created.")
-
-# Add a channel dimension (1 channel)
-X_train_tensor = torch.Tensor(X_train).unsqueeze(1).to(device)  
-Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
-print("Unsqueezed.")
-print("X_train_tensor shape", X_train_tensor.shape)
-
-# Create a DataLoader for training data
-train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-print("Loaders created.")
-
-weights = [1, 6]
-# Training loop
-epochs = int(input("Enter preffered epoch count: "))
-for epoch in range(epochs):
-    model.train()
-    running_loss = 0.0
-    i = 0
-    
-    # Wrap train_loader with tqdm for a progress bar
-    for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
-        inputs, labels = inputs.to(device), labels.to(device)
-        
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-        
-    # Print the average loss for this epoch
-    print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}\n")
 # Saving the model's state dictionary
 torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
 
