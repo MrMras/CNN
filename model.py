@@ -1,20 +1,18 @@
 #Import the libraries
-import cv2
-import os
-import random
-import numpy as np
+# import cv2
 import config
 import matplotlib.pyplot as plt
+import numpy as np
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from copy import deepcopy
-from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
+# from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
 from model_structure_3d import UNet3D as UNet
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
-
 
 # Initalize the seed for the possibility to repeat the result
 seed = 1
@@ -61,46 +59,128 @@ test_items_X = all_items_X[split_index:]
 train_items_Y = all_items_Y[:split_index]
 test_items_Y = all_items_Y[split_index:]
 
-# Initialize arrays to store training and testing data
+# Initialize the arrays to store training and testing data
 X_train = []
 X_test = []
 Y_train = []
 Y_test = []
 
 # Load the data
-
 for array in tqdm(train_items_X, desc="Loading Training Images"):
-    X_train.append([])
-    Y_train.append([])
+    X_train_temp = []
+    Y_train_temp = []
     for item in array:
         path = os.path.join(IN_DATA_PATH, item)
-        img = imread(path, IMREAD_GRAYSCALE)
-        X_train[-1].append(img / 255)
-        Y_train[-1].append(cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)[1] // 255)
+        img = plt.imread(path)
+        X_train_temp.append(img / 255)
+        Y_train_temp.append((img >= 61).astype(np.uint8))
+    X_train.append(X_train_temp)
+    Y_train.append(Y_train_temp)
 
 for item in tqdm(test_items_X, desc="Loading Test Images"):
-    X_test.append([])
-    Y_test.append([])
+    X_test_temp = []
+    Y_test_temp = []
     for item in array:
         path = os.path.join(IN_DATA_PATH, item)
-        img = imread(path, IMREAD_GRAYSCALE)
-        X_test[-1].append(img / 255)
-        Y_test[-1].append(cv2.threshold(img, 61, 255, cv2.THRESH_BINARY)[1] // 255)
-
-print("Images loaded")
+        img = plt.imread(path)
+        X_test_temp.append(img / 255)
+        Y_test_temp.append((img >= 61).astype(np.uint8))
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
 X_test = np.array(X_test)
 Y_train = np.array(Y_train)
 Y_test = np.array(Y_test)
-print("X_train shape:", X_train.shape)
 
 # b = random.randint(0, len(X_train))
 # image_index = b
 # imshow(X_train[image_index])
 # plt.show()
 # imshow(np.squeeze(Y_train[image_index]))
+# plt.show()
+
+
+# Get the device
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Create the model
+model = UNet().to(device)
+print("Model created.")
+
+# Print the model summary
+print(model)
+
+# Create the model
+model = UNet()
+print("Model created.")
+
+# Define loss function and optimizer
+criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary segmentation
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+print("Criterion and optimizer created.")
+
+# Add a channel dimension (1 channel)
+X_train_tensor = torch.Tensor(X_train).unsqueeze(1).to(device)  
+Y_train_tensor = torch.Tensor(Y_train).unsqueeze(1).to(device)
+print("Unsqueezed.")
+
+# Create a DataLoader for training data
+train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+print("Loaders created.")
+
+weights = [1, 11]
+# Training loop
+epochs = int(input("Enter preffered epoch count: "))
+for epoch in range(epochs):
+    model.train()
+    running_loss = 0.0
+    i = 0
+    
+    # Wrap train_loader with tqdm for a progress bar
+    for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
+        inputs, labels = inputs.to(device), labels.to(device)
+        
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+        
+    # Print the average loss for this epoch
+    print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
+# Saving the model's state dictionary
+torch.save(deepcopy(model).cpu().state_dict(), 'model_for_vasc.pth')
+
+# Validation and prediction
+model.eval()  # Set the model to evaluation mode
+preds_train = []
+preds_test = []
+
+with torch.no_grad():
+    for inputs, _ in train_loader:
+        outputs = model(inputs)
+        preds_train.append(outputs.cpu().numpy())
+
+X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
+
+with torch.no_grad():
+    outputs = model(X_test_tensor)
+    preds_test.append(outputs.cpu().numpy())
+
+# Convert predictions to binary masks
+preds_train = (np.concatenate(preds_train) > 0.5).astype(np.uint8)
+preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
+
+# Perform a sanity check on random training samples
+# ix = random.randint(0, len(preds_test))
+# plt.imshow(X_test[ix].squeeze(), cmap='gray')
+# plt.show()
+# plt.imshow(Y_test[ix].squeeze(), cmap='gray')
+# plt.show()
+# plt.imshow(preds_test[ix].squeeze(), cmap='gray')
 # plt.show()
 
 
@@ -127,6 +207,7 @@ print("X_train_tensor shape", X_train_tensor.shape)
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 print("Loaders created.")
+
 weights = [1, 6]
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
