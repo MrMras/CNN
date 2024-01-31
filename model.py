@@ -72,8 +72,8 @@ for array in tqdm(train_items_X, desc="Loading Training Images"):
     for item in array:
         path = os.path.join(IN_DATA_PATH, item)
         img = plt.imread(path)
-        X_train_temp.append(img / 255)
-        Y_train_temp.append((img >= 61).astype(np.uint8))
+        X_train_temp.append(img)
+        Y_train_temp.append((img >= 61/255).astype(np.uint8))
     X_train.append(X_train_temp)
     Y_train.append(Y_train_temp)
 
@@ -83,23 +83,20 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
     for item in array:
         path = os.path.join(IN_DATA_PATH, item)
         img = plt.imread(path)
-        X_test_temp.append(img / 255)
-        Y_test_temp.append((img >= 61).astype(np.uint8))
+        X_test_temp.append(img)
+        Y_test_temp.append((img >= 61/255).astype(np.uint8))
     X_test.append(X_test_temp)
     Y_test.append(Y_test_temp)
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
-print("X_train uniques: ", np.unique(X_train))
 
 X_test = np.array(X_test)
-print("X_test uniques: ", np.unique(X_test))
 
 Y_train = np.array(Y_train)
-print("Y_train uniques: ", np.unique(Y_train))
 
 Y_test = np.array(Y_test)
-print("Y_test uniques: ", np.unique(Y_test))
+
 
 # b = random.randint(0, len(X_train))
 # image_index = b
