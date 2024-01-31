@@ -90,16 +90,16 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
-print("X_train shape:", X_train.shape)
+print("X_train uniques: ", np.unique(X_train))
 
 X_test = np.array(X_test)
-print("X_test shape:", X_test.shape)
+print("X_test uniques: ", np.unique(X_test))
 
 Y_train = np.array(Y_train)
-print("Y_train shape:", Y_train.shape)
+print("Y_train uniques: ", np.unique(Y_train))
 
 Y_test = np.array(Y_test)
-print("Y_test shape:", Y_test.shape)
+print("Y_test uniques: ", np.unique(Y_test))
 
 # b = random.randint(0, len(X_train))
 # image_index = b
