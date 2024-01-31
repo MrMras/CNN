@@ -85,6 +85,8 @@ for item in tqdm(test_items_X, desc="Loading Test Images"):
         img = plt.imread(path)
         X_test_temp.append(img / 255)
         Y_test_temp.append((img >= 61).astype(np.uint8))
+    X_test.append(X_test_temp)
+    Y_test.append(Y_test_temp)
 
 # Convert lists to NumPy arrays
 X_train = np.array(X_train)
