@@ -23,7 +23,7 @@ class UNet3D(nn.Module):
             nn.MaxPool3d(2),
 
             nn.Conv3d(16, 32, 3, padding=1),
-            nn.BatchNorm3d(16),
+            nn.BatchNorm3d(32),
             nn.ReLU(),
             nn.Dropout3d(0.1),
             nn.Conv3d(32, 32, 3, padding=1),
@@ -32,7 +32,7 @@ class UNet3D(nn.Module):
             nn.MaxPool3d(2),
 
             nn.Conv3d(32, 64, 3, padding=1),
-            nn.BatchNorm3d(32),
+            nn.BatchNorm3d(64),
             nn.ReLU(),
             nn.Dropout3d(0.2),
             nn.Conv3d(64, 64, 3, padding=1),
@@ -41,7 +41,7 @@ class UNet3D(nn.Module):
             nn.MaxPool3d(2),
 
             nn.Conv3d(64, 128, 3, padding=1),
-            nn.BatchNorm3d(64),
+            nn.BatchNorm3d(128),
             nn.ReLU(),
             nn.Dropout3d(0.2),
             nn.Conv3d(128, 128, 3, padding=1),
@@ -50,7 +50,7 @@ class UNet3D(nn.Module):
             nn.MaxPool3d(2),
 
             nn.Conv3d(128, 256, 3, padding=1),
-            nn.BatchNorm3d(128),
+            nn.BatchNorm3d(256),
             nn.ReLU(),
             nn.Dropout3d(0.3),
             nn.Conv3d(256, 256, 3, padding=1),
