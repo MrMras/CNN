@@ -1,13 +1,16 @@
 #Import the libraries
+
 # import cv2
+import sys
+sys.path.append("../")
 import config
-import load
-import train
+
+from load import load_data
+from train import train
 
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -29,10 +32,10 @@ IMG_HEIGHT = config.HEIGHT
 IMG_CHANNELS = 1
 
 # Define the path to data folder
-IN_DATA_PATH = "./dataset/indata/"
-OUT_DATA_PATH = "./dataset/outdata/"
+IN_DATA_PATH = "../dataset/indata/"
+OUT_DATA_PATH = "../dataset/outdata/"
 
-X_train, X_test, Y_train, Y_test = load.load_data(IN_DATA_PATH, OUT_DATA_PATH)
+X_train, X_test, Y_train, Y_test = load_data(IN_DATA_PATH, OUT_DATA_PATH)
 
 # b = random.randint(0, len(X_train))
 # image_index = b
