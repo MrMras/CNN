@@ -1,6 +1,7 @@
 import config
 import torch
 import numpy as np
+import os
 
 from copy import deepcopy
 from tqdm import tqdm
@@ -29,7 +30,8 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
     # Get a random id from 10^6 to 10^7 - 1
     model_id = np.random.randint(1000000, 10000000 - 1)
     # Saving the model's state dictionary
-    
+    if not os.path.exists("../saved_models"):
+        os.makedirs("../saved_models")
     torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/model_for_vasc_3d{model_id}.pth')
     print(f"Model saved as model_for_vasc_3d{model_id}.pth")
     # Set the model to evaluation mode
