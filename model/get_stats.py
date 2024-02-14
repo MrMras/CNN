@@ -1,13 +1,16 @@
 import torch
 import numpy as np
 
-def get_stats(model, X_test_tensor, Y_test):
+def get_stats(model, X_test, Y_test, device):
     # Set the model to evaluation mode
     model.eval()
     
+    # Convert X_test to a tensor and move it to the appropriate device
+    X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
+
     # Initialize an empty list to store the predictions
     preds_test = []
-    
+
     # Perform forward pass without gradient computation
     with torch.no_grad():
         outputs = model(X_test_tensor)
