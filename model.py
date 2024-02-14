@@ -46,8 +46,8 @@ data = list(zip(all_items_X, all_items_Y))
 
 np.random.shuffle(data)
 all_items_X, all_items_Y = zip(*data)
-all_items_X = np.array(all_items_X)[0:l // 2]
-all_items_Y = np.array(all_items_Y)[0:l // 2]
+all_items_X = np.array(all_items_X)[0:l]
+all_items_Y = np.array(all_items_Y)[0:l]
 
 # Calculate the split index based on the training ratio
 split_index = int(len(all_items_X) * TRAIN_RATIO)
@@ -128,7 +128,9 @@ train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 print("Loaders created.")
 
-weights = [1, 11]
+ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
+weights = [1, ratio]
+print("Weights 1 to", weights[1])
 # Training loop
 epochs = int(input("Enter preffered epoch count: "))
 for epoch in range(epochs):
@@ -161,7 +163,6 @@ preds_test = []
 
 # Convert X_test to a tensor and move it to the appropriate device
 X_test_tensor = torch.Tensor(X_test).unsqueeze(1).to(device)
-print("X_test_tensor shape:", X_test_tensor.shape)
 
 # Perform forward pass without gradient computation
 with torch.no_grad():
