@@ -50,6 +50,7 @@ def  load_data(path1, path2):
         Y_train_temp = []
         for item in array:
             path = os.path.join(path1, item)
+            print(path)
             img = plt.imread(path)
             X_train_temp.append(img)
             Y_train_temp.append((img >= 61/255).astype(np.uint8))
