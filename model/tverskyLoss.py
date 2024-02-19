@@ -105,3 +105,18 @@ class TverskyLoss(nn.Module):
         tversky = tversky.mean()
 
         return -tversky
+
+class FocalTversky_loss(nn.Module):
+    """
+    paper: https://arxiv.org/pdf/1810.07842.pdf
+    author code: https://github.com/nabsabraham/focal-tversky-unet/blob/347d39117c24540400dfe80d106d2fb06d2b99e1/losses.py#L65
+    """
+    def __init__(self, tversky_kwargs, gamma=0.75):
+        super(FocalTversky_loss, self).__init__()
+        self.gamma = gamma
+        self.tversky = TverskyLoss(**tversky_kwargs)
+
+    def forward(self, net_output, target):
+        tversky_loss = 1 + self.tversky(net_output, target) # = 1-tversky(net_output, target)
+        focal_tversky = torch.pow(tversky_loss, self.gamma)
+        return focal_tversky
