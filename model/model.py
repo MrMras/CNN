@@ -7,6 +7,7 @@ import config
 
 from load import load_data
 from train import train
+from tverskyLoss import TverskyLoss
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +15,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 
 from copy import deepcopy
 # from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
@@ -52,8 +54,12 @@ print(f"Device: {device}.")
 model = UNet().to(device)
 print("Model created.")
 
+ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
+weights = [1 / (1 + ratio), ratio / (1 + ratio)]
+print("Ratio 1 to", weights[1])
+
 # Define loss function and optimizer
-criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary segmentation
+criterion = TverskyLoss(alpha=weights[0], beta=weights[1])  # Binary Cross-Entropy Loss for binary segmentation
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
@@ -67,11 +73,7 @@ train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 print("Loaders created.")
 
-ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
-weights = [1, ratio]
-print("Ratio 1 to", weights[1])
-# Training loop
-
+# Train the model
 if len(sys.argv) != 2:
     epochs = 20
 else:
