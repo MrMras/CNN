@@ -8,6 +8,7 @@ import config
 from load import load_data
 from train import train
 from tverskyLoss import TverskyLoss
+from tverskyLoss import FocalTverskyLoss
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,10 +57,10 @@ print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
 weights = [1 / (1 + ratio), ratio / (1 + ratio)]
-print("Ratio 1 to", weights[1])
+print(f"Ratio {weights[0]}  to {weights[1]}", weights[1])
 
 # Define loss function and optimizer
-criterion = TverskyLoss(alpha=weights[0], beta=weights[1])  # Binary Cross-Entropy Loss for binary segmentation
+criterion = FocalTverskyLoss()  # Binary Cross-Entropy Loss for binary segmentation
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
