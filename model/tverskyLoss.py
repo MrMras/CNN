@@ -66,7 +66,7 @@ def get_tp_fp_fn(net_output, gt, axes=None, mask=None, square=False):
     return tp, fp, fn
 
 class TverskyLoss(nn.Module):
-    def __init__(self, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1.,
+    def __init__(self, alpha, beta, apply_nonlin=None, batch_dice=False, do_bg=True, smooth=1.,
                  square=False):
         """
         paper: https://arxiv.org/pdf/1706.05721.pdf
@@ -78,8 +78,8 @@ class TverskyLoss(nn.Module):
         self.batch_dice = batch_dice
         self.apply_nonlin = apply_nonlin
         self.smooth = smooth
-        self.alpha = 0.3
-        self.beta = 0.7
+        self.alpha = alpha
+        self.beta = beta
 
     def forward(self, x, y, loss_mask=None):
         shp_x = x.shape
@@ -111,7 +111,16 @@ class FocalTverskyLoss(nn.Module):
     paper: https://arxiv.org/pdf/1810.07842.pdf
     author code: https://github.com/nabsabraham/focal-tversky-unet/blob/347d39117c24540400dfe80d106d2fb06d2b99e1/losses.py#L65
     """
-    def __init__(self, tversky_kwargs, gamma=0.75):
+    def __init__(self, alpha, beta, gamma=0.75):
+        tversky_kwargs = {
+            'apply_nonlin': None,
+            'batch_dice': False,
+            'do_bg': True,
+            'smooth': 1.0,
+            'square': False,
+            'alpha': alpha,
+            'beta': beta
+        }
         super(FocalTverskyLoss, self).__init__()
         self.gamma = gamma
         self.tversky = TverskyLoss(**tversky_kwargs)
@@ -120,3 +129,5 @@ class FocalTverskyLoss(nn.Module):
         tversky_loss = 1 + self.tversky(net_output, target) # = 1-tversky(net_output, target)
         focal_tversky = torch.pow(tversky_loss, self.gamma)
         return focal_tversky
+
+cl = FocalTverskyLoss(0.3, 0.7, gamma=0.75)

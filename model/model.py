@@ -60,7 +60,7 @@ weights = [1 / (1 + ratio), ratio / (1 + ratio)]
 print(f"Ratio {weights[0]}  to {weights[1]}", weights[1])
 
 # Define loss function and optimizer
-criterion = FocalTverskyLoss()  # Binary Cross-Entropy Loss for binary segmentation
+criterion = FocalTverskyLoss(weights[0], weights[1])  # Binary Cross-Entropy Loss for binary segmentation
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 print("Criterion and optimizer created.")
 
