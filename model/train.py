@@ -59,4 +59,4 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
     torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/model_for_vasc_3d{model_id}.pth')
     print(f"Model saved as model_for_vasc_3d{model_id}.pth")
     # Set the model to evaluation mode
-    return model
+    return model, positive_accuracy, negative_accuracy

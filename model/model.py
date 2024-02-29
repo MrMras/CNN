@@ -81,13 +81,17 @@ if len(sys.argv) != 2:
 else:
     epochs = int(sys.argv[1])
 
-model, loss_curve = train(model, criterion, optimizer, train_loader, device, epochs, weights)
+model, positive_accuracy, negative_accuracy = train(model, criterion, optimizer, train_loader, device, epochs, weights)
 
 # Specify the file name
-file_name = 'loss.curve.txt'
+file_name1 = 'positive_accuracy.txt'
+file_name2 = 'negative_accuracy.txt'
 
 # Save the loss_curve to the file
-with open(file_name, 'a') as file:
-    np.savetxt(file, loss_curve)
+with open(file_name1, 'a') as file:
+    np.savetxt(file, positive_accuracy, delimiter='\n')
+    
+with open(file_name2, 'a') as file:
+    np.savetxt(file, negative_accuracy, delimiter='\n')
 
 get_stats(model, X_test, Y_test, device)
