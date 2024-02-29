@@ -25,8 +25,8 @@ def  load_data(path1, path2):
 
     np.random.shuffle(data)
     all_items_X, all_items_Y = zip(*data)
-    all_items_X = np.array(all_items_X)[0:l // 2]
-    all_items_Y = np.array(all_items_Y)[0:l // 2]
+    all_items_X = np.array(all_items_X)[0:l]
+    all_items_Y = np.array(all_items_Y)[0:l]
 
     # Calculate the split index based on the training ratio
     split_index = int(len(all_items_X) * config.TRAIN_RATIO)
@@ -50,7 +50,6 @@ def  load_data(path1, path2):
         Y_train_temp = []
         for item in array:
             path = os.path.join(path1, item)
-            print(path)
             img = plt.imread(path)
             X_train_temp.append(img)
             Y_train_temp.append((img >= 61/255).astype(np.uint8))

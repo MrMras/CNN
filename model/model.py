@@ -57,7 +57,8 @@ print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
 weights = [1 / (1 + ratio), ratio / (1 + ratio)]
-print(f"Ratio {weights[0]}  to {weights[1]}", weights[1])
+weights = [0.25, 0.75]
+print(f"Ratio {weights[0]}  to {weights[1]}")
 
 # Define loss function and optimizer
 criterion = FocalTverskyLoss(weights[0], weights[1])  # Binary Cross-Entropy Loss for binary segmentation

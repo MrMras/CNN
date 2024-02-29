@@ -20,13 +20,13 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
+            # loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
             
         # Print the average loss for this epoch
-        print(f"\nEpoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}")
+        print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}\n")
     # Get a random id from 10^6 to 10^7 - 1
     model_id = np.random.randint(1000000, 10000000 - 1)
     # Saving the model's state dictionary
