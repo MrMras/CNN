@@ -7,7 +7,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 def train(model, criterion, optimizer, train_loader, device, epochs, weights):
-    
+    loss_curve = []
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
@@ -27,6 +27,7 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
             
         # Print the average loss for this epoch
         print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss / len(train_loader)}\n")
+        loss_curve.append(running_loss / len(train_loader))
     # Get a random id from 10^6 to 10^7 - 1
     model_id = np.random.randint(1000000, 10000000 - 1)
     # Saving the model's state dictionary
@@ -35,4 +36,4 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
     torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/model_for_vasc_3d{model_id}.pth')
     print(f"Model saved as model_for_vasc_3d{model_id}.pth")
     # Set the model to evaluation mode
-    return model
+    return model, loss_curve

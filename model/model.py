@@ -81,6 +81,13 @@ if len(sys.argv) != 2:
 else:
     epochs = int(sys.argv[1])
 
-model = train(model, criterion, optimizer, train_loader, device, epochs, weights)
+model, loss_curve = train(model, criterion, optimizer, train_loader, device, epochs, weights)
+
+# Specify the file name
+file_name = 'loss.curve.txt'
+
+# Save the loss_curve to the file
+with open(file_name, 'a') as file:
+    np.savetxt(file, loss_curve)
 
 get_stats(model, X_test, Y_test, device)

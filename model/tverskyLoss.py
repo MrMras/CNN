@@ -129,5 +129,3 @@ class FocalTverskyLoss(nn.Module):
         tversky_loss = 1 + self.tversky(net_output, target) # = 1-tversky(net_output, target)
         focal_tversky = torch.pow(tversky_loss, self.gamma)
         return focal_tversky
-
-cl = FocalTverskyLoss(0.3, 0.7, gamma=0.75)
