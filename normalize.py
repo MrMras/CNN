@@ -2,7 +2,6 @@ import config
 import concurrent.futures
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 from tqdm import tqdm
 
@@ -180,8 +179,112 @@ def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
                 cv2.imwrite(os.path.join(out_path2, f"img_{ind}_{k}.png"), img_tmp2)
             ind += 1
 
-# Define the directory path
-base_dir = './dataset'
+
+def cut_data_2(data_in, data_out, out_path1, out_path2, borders):
+    # Extracting border coordinates
+    bordTop, bordLeft = borders
+    # Starting index for saving images
+    ind = 1000000
+    # List of files in input paths
+    # List to store mean intensities of processed images
+    sizes = np.array([])
+
+    # Calculating the number of splits vertically and horizontally
+    vertical_split = vertical // config.HEIGHT
+    horizontal_split = horizontal // config.WIDTH
+         
+    # Calculating grid size
+    grid_size = vertical_split * horizontal_split
+    shape = data_in.shape
+
+    for i in tqdm(range(vertical_split * horizontal_split), desc="Processing"):
+        # Calculate the grid indices
+        j = i % horizontal_split
+        k = i // horizontal_split
+
+        # Iterate through the image files in batches
+        for i in range(0, shape[2] - shape[2] % config.NUM_PICS, config.NUM_PICS):
+            # Initialize a list to store intensities for each image in the group
+            group_intensities = np.array([])
+
+            # Iterate through the images in the current group
+            for i in range(shape[2]):
+                # Read and extract a region of interest from the image
+                img_tmp1 = data_out[:, :, i]
+                img_tmp1 = img_tmp1[bordTop + config.HEIGHT * k: bordTop + config.HEIGHT * (k + 1), bordLeft + config.WIDTH * j: bordLeft + config.WIDTH * (j + 1)]
+                # Calculate and store the mean intensity of the current image
+                group_intensities = np.append(group_intensities, np.mean(img_tmp1))
+
+            # Calculate the average intensity for the current group
+            average_intensity = np.mean(group_intensities)
+
+            # Store the average intensity in the 'sizes' list
+            sizes = np.append(sizes, average_intensity)
+
+    # Calculating the median of the mean intensities
+    print(sizes.dtype)
+    non_zero_values = sizes[sizes != 0]
+    print("Uniques:", np.unique(sizes))
+    med = np.median(non_zero_values)
+    print("Median", med)
+    mean = np.mean(non_zero_values)
+    print("Mean", mean)
+    # print(f"length - {len(files_in1)}")
+    # print(f"length of sizes - {len(sizes)}")
+    # print(f"grid_size - {grid_size}")
+    # Iterating through each set of images and writing selected ones
+    for i in tqdm(range(len(sizes)), "Writting images"):
+        # Checking if the mean intensity of the set is greater than or equal to the median
+        if sizes[i] >= med:
+            # Extracting indices for the selected set of images
+            pic_number = [(i * config.NUM_PICS + j) % (shape[2] - shape[2] % config.NUM_PICS) for j in range(config.NUM_PICS)]
+            horizontal_number = i // ((shape[2] - shape[2] % config.NUM_PICS) // config.NUM_PICS) % horizontal_split
+            vertical_number = i // ((shape[2] - shape[2] % config.NUM_PICS) // config.NUM_PICS) // horizontal_split
+
+            # Iterating through images in the selected set and writing them
+            for k in range(config.NUM_PICS):
+                
+                # print(f"i - {i}\nk - {k}\npic_number[k] - {pic_number[k]}")
+                img_tmp1 = data_out[:, :, pic_number[k]]
+                img_tmp2 = data_in[:, :, pic_number[k]]
+
+                img_tmp1 = img_tmp1[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+                img_tmp2 = img_tmp2[bordTop  + config.HEIGHT * vertical_number: bordTop  + config.HEIGHT * (vertical_number + 1), bordLeft + config.WIDTH * horizontal_number : bordLeft + config.WIDTH * (horizontal_number + 1)]
+                cv2.imwrite(os.path.join(out_path1, f"img_{ind}_{k}.png"), img_tmp1)
+                cv2.imwrite(os.path.join(out_path2, f"img_{ind}_{k}.png"), img_tmp2)
+            ind += 1
+
+
+# # Define the directory path
+# base_dir = './dataset'
+
+# # Create the 'dataset' folder
+# if not os.path.exists(base_dir):
+#     os.makedirs(base_dir)
+
+# # Create the 'indata' folder inside 'dataset'
+# indata_dir = os.path.join(base_dir, 'indata')
+# if not os.path.exists(indata_dir):
+#     os.makedirs(indata_dir)
+
+# # Create the 'outdata' folder inside 'dataset'
+# outdata_dir = os.path.join(base_dir, 'outdata')
+# if not os.path.exists(outdata_dir):
+#     os.makedirs(outdata_dir)
+
+# path_folder1 = "./preparations/data/outdata/"
+# path_folder1_cut = "./dataset/outdata/"
+
+# path_folder2 = "./preparations/data/indata/"
+# path_folder2_cut = "./dataset/indata/"
+
+# cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
+            
+data_in = np.load("./KESM/whole_volume_kesm.npy")
+data_out = np.load("./KESM/ground_truth_kesm.npy")
+base_dir = './dataset_kesm'
+path_folder1_cut = "./dataset_kesm/outdata/"
+path_folder2_cut = "./dataset_kesm/indata/"
 
 # Create the 'dataset' folder
 if not os.path.exists(base_dir):
@@ -197,10 +300,5 @@ outdata_dir = os.path.join(base_dir, 'outdata')
 if not os.path.exists(outdata_dir):
     os.makedirs(outdata_dir)
 
-path_folder1 = "./preparations/data/outdata/"
-path_folder1_cut = "./dataset/outdata/"
 
-path_folder2 = "./preparations/data/indata/"
-path_folder2_cut = "./dataset/indata/"
-
-cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
+cut_data(data_in, data_out, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
