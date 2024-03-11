@@ -56,53 +56,57 @@ def merge_borders(borders):
         bordBottom = max(bordBottom, bordBottomTmp)
     return bordLeft, bordRight, bordTop, bordBottom
 
-# path to the folder with already segmented data
-path_folder = "./preparations/data/outdata/"
+# # path to the folder with already segmented data
+# path_folder = "./preparations/data/outdata/"
 
-# get a list of paths to the files
-dirs = os.listdir(path_folder)
-path_files = [os.path.join(path_folder, x) for x in dirs]
+# # get a list of paths to the files
+# dirs = os.listdir(path_folder)
+# path_files = [os.path.join(path_folder, x) for x in dirs]
 
-# Number of threads to use
-num_threads = min(len(path_files), 4)  # Adjust the number of threads as needed
+# # Number of threads to use
+# num_threads = min(len(path_files), 4)  # Adjust the number of threads as needed
 
-borders = []
+# borders = []
 
-# Use ThreadPoolExecutor to parallelize the finding of borders
-with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-    # Submit tasks for each image to find borders concurrently
-    futures = [executor.submit(find_borders, path) for path in path_files]
+# # Use ThreadPoolExecutor to parallelize the finding of borders
+# with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+#     # Submit tasks for each image to find borders concurrently
+#     futures = [executor.submit(find_borders, path) for path in path_files]
 
-    # Collect results
-    for future in tqdm(concurrent.futures.as_completed(futures), "Finding borders"):
-        borders.append(future.result())
+#     # Collect results
+#     for future in tqdm(concurrent.futures.as_completed(futures), "Finding borders"):
+#         borders.append(future.result())
 
-# Merge borders from multiple images
-bordLeft, bordRight, bordTop, bordBottom = merge_borders(borders)
+# # Merge borders from multiple images
+# bordLeft, bordRight, bordTop, bordBottom = merge_borders(borders)
 
-print(bordLeft, bordRight, bordTop, bordBottom)
+# print(bordLeft, bordRight, bordTop, bordBottom)
 
-horizontal = bordRight - bordLeft
-vertical = bordBottom - bordTop
+# horizontal = bordRight - bordLeft
+# vertical = bordBottom - bordTop
 
-print("Initial shape: ({0}, {1})".format(vertical, horizontal))
+# print("Initial shape: ({0}, {1})".format(vertical, horizontal))
 
-horizontalExtra = horizontal % config.WIDTH
-verticalExtra = vertical % config.HEIGHT
+# horizontalExtra = horizontal % config.WIDTH
+# verticalExtra = vertical % config.HEIGHT
 
-print("Extras : ({0}, {1})".format(verticalExtra, horizontalExtra))
+# print("Extras : ({0}, {1})".format(verticalExtra, horizontalExtra))
 
-bordLeft = int(bordLeft + horizontalExtra / 2)
-bordRight = int(bordRight - horizontalExtra / 2)
+# bordLeft = int(bordLeft + horizontalExtra / 2)
+# bordRight = int(bordRight - horizontalExtra / 2)
 
-bordTop = int(bordTop + verticalExtra / 2)
-bordBottom = int(bordBottom - verticalExtra / 2)
+# bordTop = int(bordTop + verticalExtra / 2)
+# bordBottom = int(bordBottom - verticalExtra / 2)
 
-horizontal = bordRight - bordLeft
-vertical = bordBottom - bordTop
+# horizontal = bordRight - bordLeft
+# vertical = bordBottom - bordTop
 
-print("New shape: ({0}, {1})".format(vertical, horizontal))
+# print("New shape: ({0}, {1})".format(vertical, horizontal))
 
+vertical = 384
+horizontal = 384
+bordTop = 0
+bordLeft = 0
 
 def cut_data(in_path1, in_path2, out_path1, out_path2, borders):
     # Extracting border coordinates
@@ -210,8 +214,7 @@ def cut_data_2(data_in, data_out, out_path1, out_path2, borders):
             # Iterate through the images in the current group
             for i in range(shape[2]):
                 # Read and extract a region of interest from the image
-                img_tmp1 = data_out[:, :, i]
-                img_tmp1 = img_tmp1[bordTop + config.HEIGHT * k: bordTop + config.HEIGHT * (k + 1), bordLeft + config.WIDTH * j: bordLeft + config.WIDTH * (j + 1)]
+                img_tmp1 = data_out[bordTop + config.HEIGHT * k: bordTop + config.HEIGHT * (k + 1), bordLeft + config.WIDTH * j: bordLeft + config.WIDTH * (j + 1), i]
                 # Calculate and store the mean intensity of the current image
                 group_intensities = np.append(group_intensities, np.mean(img_tmp1))
 
@@ -254,7 +257,6 @@ def cut_data_2(data_in, data_out, out_path1, out_path2, borders):
                 cv2.imwrite(os.path.join(out_path2, f"img_{ind}_{k}.png"), img_tmp2)
             ind += 1
 
-
 # # Define the directory path
 # base_dir = './dataset'
 
@@ -276,7 +278,7 @@ def cut_data_2(data_in, data_out, out_path1, out_path2, borders):
 # path_folder1_cut = "./dataset/outdata/"
 
 # path_folder2 = "./preparations/data/indata/"
-# path_folder2_cut = "./dataset/indata/"
+# path_folder2_cut = "./dataset/indata/" 
 
 # cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
             
@@ -301,4 +303,4 @@ if not os.path.exists(outdata_dir):
     os.makedirs(outdata_dir)
 
 
-cut_data(data_in, data_out, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
+cut_data_2(data_in, data_out, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
