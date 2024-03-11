@@ -282,8 +282,8 @@ def cut_data_2(data_in, data_out, out_path1, out_path2, borders):
 
 # cut_data(path_folder1, path_folder2, path_folder1_cut, path_folder2_cut, (bordTop, bordLeft))
             
-data_in = np.load("./KESM/whole_volume_kesm.npy")
-data_out = np.load("./KESM/ground_truth_kesm.npy")
+data_in = np.load("./preparations/kesm/whole_volume_kesm.npy")
+data_out = np.load("./preparations/kesm/ground_truth_kesm.npy")
 base_dir = './dataset_kesm'
 path_folder1_cut = "./dataset_kesm/outdata/"
 path_folder2_cut = "./dataset_kesm/indata/"
