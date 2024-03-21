@@ -21,7 +21,7 @@ import torch.optim as optim
 from copy import deepcopy
 # from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
 from get_stats import get_stats
-from model_structure_3d_3 import UNet3D as UNet
+from model_structures.model_structure_3d_1l import UNet3D
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -35,10 +35,10 @@ IMG_HEIGHT = config.HEIGHT
 IMG_CHANNELS = 1
 
 # Define the path to data folder
-IN_DATA_PATH = "../dataset/indata/"
-OUT_DATA_PATH = "../dataset/outdata/"
+IN_DATA_NPY = "../data/micro_ct/volume_input.npy"
+OUT_DATA_NPY = "../dataset/outdata/volume_ground_truth.npy"
 
-X_train, X_test, Y_train, Y_test = load_data(IN_DATA_PATH, OUT_DATA_PATH)
+X_train, X_test, Y_train, Y_test = load_data(IN_DATA_NPY, OUT_DATA_NPY)
 
 # b = random.randint(0, len(X_train))
 # image_index = b
@@ -52,7 +52,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}.")
 
 # Create the model
-model = UNet().to(device)
+model = UNet3D().to(device)
 print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
@@ -85,7 +85,8 @@ else:
     epochs = int(sys.argv[1])
     tag = 'w'
 
-model, positive_accuracy, negative_accuracy = train(model, criterion, optimizer, train_loader, device, epochs, weights)
+dataset_name = IN_DATA_NPY.split("/")[-2]
+model, positive_accuracy, negative_accuracy = train(model, criterion, optimizer, train_loader, device, epochs, dataset_name)
 
 # Specify the file name
 file_name1 = 'positive_accuracy.txt'

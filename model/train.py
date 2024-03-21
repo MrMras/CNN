@@ -6,7 +6,7 @@ import os
 from copy import deepcopy
 from tqdm import tqdm
 
-def train(model, criterion, optimizer, train_loader, device, epochs, weights):
+def train(model, criterion, optimizer, train_loader, device, epochs, dataset_name):
     positive_accuracy = []
     negative_accuracy = []
     for epoch in range(epochs):
@@ -21,7 +21,6 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            # loss = (loss * (weights[0] + labels * (weights[1] - weights[0]))).mean()
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -54,8 +53,9 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
     # Get a random id from 10^6 to 10^7 - 1
     model_id = np.random.randint(1000000, 10000000 - 1)
     # Saving the model's state dictionary
-    if not os.path.exists("../saved_models"):
-        os.makedirs("../saved_models")
+    if not os.path.exists("../saved_models/" + dataset_name):
+        os.makedirs("../saved_models/" + dataset_name)
+
     torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/model_for_vasc_3d{model_id}.pth')
     print(f"Model saved as model_for_vasc_3d{model_id}.pth")
     # Set the model to evaluation mode
