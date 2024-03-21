@@ -49,10 +49,12 @@ def  load_data(path1, path2):
         X_train_temp = []
         Y_train_temp = []
         for item in array:
-            path = os.path.join(path1, item)
-            img = plt.imread(path)
-            X_train_temp.append(img)
-            Y_train_temp.append((img >= 61/255).astype(np.uint8))
+            path_in = os.path.join(path1, item)
+            path_out = os.path.join(path2, item)
+            img_in = plt.imread(path_in)
+            img_out = plt.imread(path_out)
+            X_train_temp.append(img_in)
+            Y_train_temp.append((img_in > 61 / 255).astype(np.uint8))
         X_train.append(X_train_temp)
         Y_train.append(Y_train_temp)
 
@@ -60,10 +62,12 @@ def  load_data(path1, path2):
         X_test_temp = []
         Y_test_temp = []
         for item in array:
-            path = os.path.join(path1, item)
-            img = plt.imread(path)
-            X_test_temp.append(img)
-            Y_test_temp.append((img >= 61/255).astype(np.uint8))
+            path_in = os.path.join(path1, item)
+            path_out = os.path.join(path2, item)
+            img_in = plt.imread(path_in)
+            img_out = plt.imread(path_out)
+            X_test_temp.append(img_in)
+            Y_test_temp.append((img_in > 61 / 255).astype(np.uint8))
         X_test.append(X_test_temp)
         Y_test.append(Y_test_temp)
     

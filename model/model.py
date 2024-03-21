@@ -21,7 +21,7 @@ import torch.optim as optim
 from copy import deepcopy
 # from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
 from get_stats import get_stats
-from model_structure_3d import UNet3D as UNet
+from model_structure_3d_3 import UNet3D as UNet
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -57,8 +57,8 @@ print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
 weights = [1 / (1 + ratio), ratio / (1 + ratio)]
-weights = [0.25, 0.75]
-print(f"Ratio {weights[0]}  to {weights[1]}")
+weights = [0.5, 0.5]
+print(f"Ratio {weights[0]} to {weights[1]}")
 
 # Define loss function and optimizer
 criterion = FocalTverskyLoss(weights[0], weights[1])  # Binary Cross-Entropy Loss for binary segmentation
@@ -75,11 +75,15 @@ train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 print("Loaders created.")
 
-# Train the model
-if len(sys.argv) != 2:
+# Train the modeil
+tag = 'a'
+if len(sys.argv) == 1:
     epochs = 20
+elif len(sys.argv) == 2:
+    epochs = int(sys.argv[1])
 else:
     epochs = int(sys.argv[1])
+    tag = 'w'
 
 model, positive_accuracy, negative_accuracy = train(model, criterion, optimizer, train_loader, device, epochs, weights)
 
@@ -88,10 +92,10 @@ file_name1 = 'positive_accuracy.txt'
 file_name2 = 'negative_accuracy.txt'
 
 # Save the loss_curve to the file
-with open(file_name1, 'a') as file:
-    np.savetxt(file, positive_accuracy, delimiter='\n')
+with open(file_name1, tag) as file:
+    np.savetxt(file, [positive_accuracy], newline='\n')
     
-with open(file_name2, 'a') as file:
-    np.savetxt(file, negative_accuracy, delimiter='\n')
+with open(file_name2, tag) as file:
+    np.savetxt(file, [negative_accuracy], newline='\n')
 
 get_stats(model, X_test, Y_test, device)

@@ -30,7 +30,7 @@ def train(model, criterion, optimizer, train_loader, device, epochs, weights):
         model.eval()  # Set the model to evaluation mode
         with torch.no_grad():
             # Assuming binary classification (positive and negative classes)
-            predictions = (outputs > 0.5).float().cpu()  # Assuming a threshold of 0.5 for binary classification
+            predictions = (outputs > 0.5).float()  # Assuming a threshold of 0.5 for binary classification
             correct_predictions = predictions.eq(labels.view_as(predictions)).sum().item()
             total_samples = labels.size(0)
 
