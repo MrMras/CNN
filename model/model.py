@@ -36,7 +36,7 @@ IMG_CHANNELS = 1
 
 # Define the path to data folder
 IN_DATA_NPY = "../data/micro_ct/volume_input.npy"
-OUT_DATA_NPY = "../dataset/outdata/volume_ground_truth.npy"
+OUT_DATA_NPY = "../data/micro_ct/volume_ground_truth.npy"
 
 X_train, X_test, Y_train, Y_test = load_data(IN_DATA_NPY, OUT_DATA_NPY)
 
@@ -73,6 +73,7 @@ print("Unsqueezed.")
 # Create a DataLoader for training data
 train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+
 print("Loaders created.")
 
 # Train the modeil

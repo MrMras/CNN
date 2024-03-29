@@ -30,7 +30,7 @@ def get_tp_fp_fn(net_output, gt, axes=None, mask=None, square=False):
 
     shp_x = net_output.shape
     shp_y = gt.shape
-
+    
     with torch.no_grad():
         if len(shp_x) != len(shp_y):
             gt = gt.view((shp_y[0], 1, *shp_y[1:]))
@@ -103,7 +103,6 @@ class TverskyLoss(nn.Module):
             else:
                 tversky = tversky[:, 1:]
         tversky = tversky.mean()
-
         return -tversky
 
 class FocalTverskyLoss(nn.Module):
@@ -127,5 +126,5 @@ class FocalTverskyLoss(nn.Module):
 
     def forward(self, net_output, target):
         tversky_loss = 1 + self.tversky(net_output, target) # = 1-tversky(net_output, target)
-        focal_tversky = torch.pow(tversky_loss, self.gamma)
+        focal_tversky = torch.pow(tversky_loss, self.gamma)        
         return focal_tversky

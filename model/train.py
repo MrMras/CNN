@@ -17,10 +17,10 @@ def train(model, criterion, optimizer, train_loader, device, epochs, dataset_nam
         # Wrap train_loader with tqdm for a progress bar
         for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
             inputs, labels = inputs.to(device), labels.to(device)
-            
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
+
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -56,7 +56,7 @@ def train(model, criterion, optimizer, train_loader, device, epochs, dataset_nam
     if not os.path.exists("../saved_models/" + dataset_name):
         os.makedirs("../saved_models/" + dataset_name)
 
-    torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/model_for_vasc_3d{model_id}.pth')
+    torch.save(deepcopy(model).cpu().state_dict(), f'../saved_models/{dataset_name}/model_for_vasc_3d{model_id}.pth')
     print(f"Model saved as model_for_vasc_3d{model_id}.pth")
     # Set the model to evaluation mode
     return model, positive_accuracy, negative_accuracy

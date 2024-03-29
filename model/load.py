@@ -14,16 +14,15 @@ def group_by_n(lst, n):
 
 def load_data(in_path, out_path):
     # Load the input and output data
-    all_items_X = os.listdir(in_path)
-    all_items_Y = os.listdir(out_path)
-    all_items_X = group_by_n(all_items_X, config.NUM_PICS)[:-1]
-    all_items_Y = group_by_n(all_items_Y, config.NUM_PICS)[:-1]
+    all_items_X = np.load(in_path)
+    all_items_Y = np.load(out_path)
     data = list(zip(all_items_X, all_items_Y))
 
     np.random.shuffle(data)
     all_items_X, all_items_Y = zip(*data)
-    all_items_X = np.array(all_items_X)
-    all_items_Y = np.array(all_items_Y)
+    all_items_X = np.array(all_items_X) / 255
+    all_items_Y = np.array(all_items_Y) // 255
+    print(np.max(all_items_X))
 
     # Calculate the split index based on the training ratio
     split_index = int(len(all_items_X) * config.TRAIN_RATIO)
