@@ -5,19 +5,11 @@ import config
 
 from tqdm import tqdm
 
-path = "./image_folder/micro_ct/M27717"
+path_in = "./unprocessed_data/some_path/input.npy"
+path_out = "./unprocessed_data/some_path/ground_truth.npy"
 
-name = path.split("/")[-1]
-
-volume_in = []
-volume_out = []
-for x in tqdm(os.listdir(path), desc="Processing"):
-    img = cv2.imread(os.path.join(path, x), cv2.IMREAD_GRAYSCALE)
-    volume_in.append(img)
-    volume_out.append((img > 61).astype(np.uint8) * 255)
-
-volume_in = np.array(volume_in)
-volume_out = np.array(volume_out)
+volume_in = np.load(path_in)
+volume_out = np.load(path_out)
 
 def find_bound_indices(arr):
     # Find indices where values are 255 along each axis

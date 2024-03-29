@@ -14,3 +14,8 @@
 /dataset_kesm/
 /data
 /micro_ct
+/blend_images
+/predictions
+/nrrd
+/unprocessed_data
+/image_folder
