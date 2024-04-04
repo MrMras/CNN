@@ -16,7 +16,7 @@ print("Dataset name:", dataset_name)
 
 def find_bound_indices(arr):
     val_max = np.max(arr)
-    # Find indices where values are 255 along each axis
+    # Find indices where values are val_max along each axis
     x_indices = np.any(arr == val_max, axis=(1, 2))
     y_indices = np.any(arr == val_max, axis=(0, 2))
     z_indices = np.any(arr == val_max, axis=(0, 1))
@@ -120,4 +120,4 @@ if not os.path.exists("./data/" + dataset_name):
     os.makedirs("./data/" + dataset_name)
 
 np.save(f"./data/{dataset_name}/volume_input.npy", filtered_arr_in)
-np.save(f"./data/{dataset_name}/volume_ground_truth.npy", filtered_arr_out)
+np.save(f"./data/{dataset_name}/volume_ground_truth.npy", filtered_arr_out * 255 / (np.max(filtered_arr_out)))
