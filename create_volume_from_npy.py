@@ -5,17 +5,21 @@ import config
 
 from tqdm import tqdm
 
-path_in = "./unprocessed_data/some_path/input.npy"
-path_out = "./unprocessed_data/some_path/ground_truth.npy"
+path_in = "./unprocessed_data/KESM/whole_volume_kesm.npy"
+path_out = "./unprocessed_data/KESM/ground_truth_kesm.npy"
 
 volume_in = np.load(path_in)
 volume_out = np.load(path_out)
 
+dataset_name = path_in.split("/")[-2]
+print("Dataset name:", dataset_name)
+
 def find_bound_indices(arr):
+    val_max = np.max(arr)
     # Find indices where values are 255 along each axis
-    x_indices = np.any(arr == 255, axis=(1, 2))
-    y_indices = np.any(arr == 255, axis=(0, 2))
-    z_indices = np.any(arr == 255, axis=(0, 1))
+    x_indices = np.any(arr == val_max, axis=(1, 2))
+    y_indices = np.any(arr == val_max, axis=(0, 2))
+    z_indices = np.any(arr == val_max, axis=(0, 1))
     
     # Find the minimum and maximum indices that contain at least one 255 along each axis
     x_min, x_max = np.where(x_indices)[0][[0, -1]]
@@ -112,8 +116,8 @@ print("Shape of filtered arr_in:", filtered_arr_in.shape)
 print("Shape of filtered arr_out:", filtered_arr_out.shape)
 
 # Create folder ./data/micro_ct, if it doesn't exist
-if not os.path.exists("./data/micro_ct/" + name):
-    os.makedirs("./data/micro_ct/" + name)
+if not os.path.exists("./data/micro_ct/" + dataset_name):
+    os.makedirs("./data/micro_ct/" + dataset_name)
 
-np.save(f"./data/micro_ct/{name}/volume_input.npy", filtered_arr_in)
-np.save(f"./data/micro_ct/{name}volume_ground_truth.npy", filtered_arr_out)
+np.save(f"./data/micro_ct/{dataset_name}/volume_input.npy", filtered_arr_in)
+np.save(f"./data/micro_ct/{dataset_name}volume_ground_truth.npy", filtered_arr_out)
