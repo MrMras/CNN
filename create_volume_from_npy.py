@@ -116,8 +116,8 @@ print("Shape of filtered arr_in:", filtered_arr_in.shape)
 print("Shape of filtered arr_out:", filtered_arr_out.shape)
 
 # Create folder ./data/micro_ct, if it doesn't exist
-if not os.path.exists("./data/micro_ct/" + dataset_name):
-    os.makedirs("./data/micro_ct/" + dataset_name)
+if not os.path.exists("./data/" + dataset_name):
+    os.makedirs("./data/" + dataset_name)
 
-np.save(f"./data/micro_ct/{dataset_name}/volume_input.npy", filtered_arr_in)
-np.save(f"./data/micro_ct/{dataset_name}volume_ground_truth.npy", filtered_arr_out)
+np.save(f"./data/{dataset_name}/volume_input.npy", filtered_arr_in)
+np.save(f"./data/{dataset_name}volume_ground_truth.npy", filtered_arr_out)
