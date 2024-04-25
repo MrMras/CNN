@@ -9,7 +9,7 @@ from copy import deepcopy as copy
 
 # Load the PyTorch model
 model = UNet3D()
-model.load_state_dict(torch.load("./saved_models/KESM/model_for_vasc_3d9803342.pth", map_location="cpu"))
+model.load_state_dict(torch.load("./saved_models/KESM/model_for_vasc_3d3733964.pth", map_location="cpu"))
 
 # Set the model to evaluation mode
 model.eval()
@@ -43,7 +43,9 @@ def calculate_binary_array(count_array, total_array):
     return new_array
 
 # Create a nrrd file from a prediction based on the input directory
-image_array = np.load("./unprocessed_data/KESM/whole_volume_kesm.npy")
+path = "./unprocessed_data/KESM/whole_volume_kesm.npy"
+image_array = np.load(path)
+name = path.split("/")[-2]
 
 image_init = np.expand_dims(image_array, axis=0)
 # Print the shape of the input and output arrays
@@ -52,7 +54,9 @@ print("Initial shape:", shape)
 
 # Parameters
 step_ratio = 1
-step = int(step_ratio * config.HEIGHT)
+step = int(config.HEIGHT / step_ratio)
+size = config.HEIGHT
+print(step, size)
 margin = 0
 
 # Create 0 copies of inputs
@@ -63,22 +67,42 @@ index = 0
 if not os.path.exists("./nrrd"):
     os.makedirs("./nrrd")
 nrrd_array = []
-# Loop over the input images
-for i in tqdm(range(0, shape[1] - shape[1] % 16, 16), "Processing"):
-    for j in range(0, shape[2] - shape[2] % step , step):
-        for k in range(0, shape[3] - shape[3] % step , step):
-            i_mod = (16 - i % 16) % 16
-            j_mod = (step - j % step) % step
-            k_mod = (step - k % step) % step
 
-            slice_tmp = image_init[:, i - i_mod : i + 16 - i_mod, j - j_mod : j + config.HEIGHT - j_mod, k - k_mod : k + config.WIDTH - k_mod]
+# amount
+i_amount = int(np.ceil(shape[1] / 16))
+j_amount = int(np.ceil(shape[2] / step))
+k_amount = int(np.ceil(shape[3] / step))
+
+for i in tqdm(range(0, i_amount), "Processing"):
+    for j in range(0, j_amount):
+        for k in range(0, k_amount):
+            # a b c based on i j k
+            
+            if shape[1] - 16 * i < 16:
+                a = shape[1] - 16
+            else:
+                a = 16 * i
+
+            if shape[2] - step * j < config.HEIGHT:
+                b = shape[2] - config.HEIGHT
+            else:
+                b = step * j
+
+            if shape[3] - step * k < config.WIDTH:
+                c = shape[3] - config.WIDTH
+            else:
+                c = step * k
+            # print(c)
+            # print(a, a + 16, "\n",b, b + config.HEIGHT, "\n", c, c + config.WIDTH)
+            slice_tmp = image_init[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH]
             array_tmp = get_prediction(slice_tmp / 255, margin)[0]
-            count_array[:, i - i_mod : i + 16 - i_mod, j - j_mod : j + config.HEIGHT - j_mod, k - k_mod : k + config.WIDTH - k_mod] = array_tmp
-            total_array[:, i - i_mod : i + 16 - i_mod, j - j_mod : j + config.HEIGHT - j_mod, k - k_mod : k + config.WIDTH - k_mod] += 1
-    
+
+            count_array[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH] = array_tmp
+            total_array[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH] += 1
+
 binary_array = calculate_binary_array(count_array, total_array)[0] * 255
 # Save the binary array as a .npy file
 if not os.path.exists("./processed_npy"):
     os.makedirs("./processed_npy")
 
-np.save("./processed_npy/kesm.npy", binary_array)
+np.save(f"./processed_npy/{name}.npy", binary_array)
