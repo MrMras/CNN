@@ -19,3 +19,5 @@
 /nrrd
 /unprocessed_data
 /image_folder
+/processed_npy
+/model_structures/__pycache__
