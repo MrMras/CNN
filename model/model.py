@@ -79,7 +79,8 @@ print("Loaders created.")
 # Train the modeil
 tag = 'a'
 if len(sys.argv) == 1:
-    epochs = 20
+    epochs = 40
+    tag = 'w'
 elif len(sys.argv) == 2:
     epochs = int(sys.argv[1])
 else:

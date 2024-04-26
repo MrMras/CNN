@@ -17,10 +17,7 @@ def get_stats(model, X_test, Y_test, device):
         preds_test.append(outputs.cpu().numpy())
 
     # Convert predictions to binary masks
-    preds_test = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
-
-    # Convert predictions to binary masks
-    preds_test_binary = (preds_test > 0.5).astype(np.uint8)
+    preds_test_binary = (np.concatenate(preds_test) > 0.5).astype(np.uint8)
 
     # Flatten the ground truth masks (Y_test) and predicted masks (preds_test_binary)
     y_true = Y_test.flatten()
@@ -36,14 +33,29 @@ def get_stats(model, X_test, Y_test, device):
     print("True Positives (TP):", TP)
     print("False Positives (FP):", FP)
     print("True Negatives (TN):", TN)
-    print("False Negatives (FN):", FN)
+    print("False Negatives (FN):", FN, end="\n\n")
 
     # Calculate other parameters
-    print("Positive's accuracy:", TP / (TP + FN))
-    print("Negative's accuracy:", TN / (TN + FP))
+    print("Positive's accuracy:", accuracy(TP, FP, FN))
+    print("Negative's accuracy:", accuracy(TN, FN, FP), end="\n\n")
 
-    print("Positive's recall:", TP / (TP + FP))
-    print("Negative's recaLL:", TN / (TN + FN))
+    print("Positive's recall:", recall(TP, FP, FN))
+    print("Negative's recaLL:", recall(TN, FN, FP), end="\n\n")
 
-    print("Total accuracy:", (TP + TN) / (TP + TN + FP + FN))
-    print("Weighted accuracy (multiplier = 4):", (4 * TP + TN) / (4 * TP + TN + FP + 4 * FN))
+    print("Positive's precision:", precision(TP, FP, FN))
+    print("Negative's precision:", precision(TN, FN, TP), end="\n\n")
+
+    print("Positive's F1 score:", f1_score(TP, FP, FN))
+    print("Negative's F1 score:", f1_score(TN, FN, TP), end="\n\n")
+
+def accuracy(TP, FP, TN):
+    return TP / (TP + TN + FP)
+
+def precision(TP, FP, FN):
+    return TP / (TP + FP) if (TP + FP) > 0 else 0
+
+def recall(TP, FP, FN):
+    return TP / (TP + FN) if (TP + FN) > 0 else 0
+
+def f1_score(TP, FP, FN):
+    return (2* TP) / (2 * TP + FP + FN)
