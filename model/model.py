@@ -21,7 +21,7 @@ import torch.optim as optim
 from copy import deepcopy
 # from cv2 import imread, imshow, waitKey, destroyAllWindows, IMREAD_GRAYSCALE
 from get_stats import get_stats
-from model_structures.model_structure_3d_1l import UNet3D
+from model_structures.models_together import UNet3D
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -35,8 +35,8 @@ IMG_HEIGHT = config.HEIGHT
 IMG_CHANNELS = 1
 
 # Define the path to data folder
-IN_DATA_NPY = "../data/micro_ct/volume_input.npy"
-OUT_DATA_NPY = "../data/micro_ct/volume_ground_truth.npy"
+IN_DATA_NPY = "../data/KESM/volume_input.npy"
+OUT_DATA_NPY = "../data/KESM/volume_ground_truth.npy"
 
 X_train, X_test, Y_train, Y_test = load_data(IN_DATA_NPY, OUT_DATA_NPY)
 
@@ -52,7 +52,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}.")
 
 # Create the model
-model = UNet3D().to(device)
+model = UNet3D(number_of_layers=2).to(device)
 print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
