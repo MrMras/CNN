@@ -10,6 +10,7 @@ class UNet3D(nn.Module):
     def __init__(self, number_of_layers=2):
         super(UNet3D, self).__init__()
         self.device = device("cuda:0" if cuda.is_available() else "cpu")
+        self.number_of_layers = number_of_layers
 
         # Number of first and last layers' channels
         base_channels = 16
