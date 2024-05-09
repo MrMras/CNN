@@ -24,13 +24,14 @@ if len(sys.argv) > 1:
     # Process each image
     for i in range(volume_in.shape[0]):
         # Apply Gaussian blur to simulate the background
-        blur_image = cv2.GaussianBlur(volume_in[i], (5, 5), 0) 
+        blur_image = cv2.GaussianBlur(volume_in[i], (127, 127), 0)     
         # Perform division
         corrected_image = cv2.divide(volume_in[i], blur_image, scale=255)
         
         # Normalize to 0-255
         corrected_images[i] = cv2.normalize(corrected_image, None, 0, 255, cv2.NORM_MINMAX)
-
+else:
+    print("No pseudo flat field correction, run with argument to enable it")
 def find_bound_indices(arr):
     val_max = np.max(arr)
     # Find indices where values are val_max along each axis
