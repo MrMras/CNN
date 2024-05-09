@@ -8,8 +8,11 @@ from tqdm import tqdm
 from copy import deepcopy as copy
 
 # Load the PyTorch model
-model = UNet3D()
-model.load_state_dict(torch.load("./saved_models/KESM/model_for_vasc_3d3733964.pth", map_location="cpu"))
+path_model = "./saved_models/KESM/model_for_vasc_3d_1l_2247062.pth"
+num = path_model.split("_")[-2][0]
+name = path_model.split("/")[-2]
+model = UNet3D(int(num))
+model.load_state_dict(torch.load(path_model, map_location="cpu"))
 
 # Set the model to evaluation mode
 model.eval()
@@ -43,17 +46,22 @@ def calculate_binary_array(count_array, total_array):
     return new_array
 
 # Create a nrrd file from a prediction based on the input directory
-path = "./unprocessed_data/KESM/whole_volume_kesm.npy"
-image_array = np.load(path)
-name = path.split("/")[-2]
+image_array = np.load("./unprocessed_data/KESM/volume_input.npy")
+# Apply Pseudo flat field correction
+blur_array = [cv2.GaussianBlur(image_array[i], (127, 127), 0) for i in range(image_array.shape[0])]
 
-image_init = np.expand_dims(image_array, axis=0)
+image_pff_array = [cv2.divide(image_array[i], blur_array[i], scale=255) for i in range(image_array.shape[0])]
+
+# normalize
+image_pff_array = (image_pff_array - np.min(image_pff_array)) / (np.max(image_pff_array) - np.min(image_pff_array))
+
+image_init = np.expand_dims(image_pff_array, axis=0)
 # Print the shape of the input and output arrays
 shape = image_init.shape
 print("Initial shape:", shape)
 
 # Parameters
-step_ratio = 1
+step_ratio = 2
 step = int(config.HEIGHT / step_ratio)
 size = config.HEIGHT
 print(step, size)
@@ -66,41 +74,37 @@ total_array = np.zeros_like(image_init)
 index = 0
 if not os.path.exists("./nrrd"):
     os.makedirs("./nrrd")
-nrrd_array = []
 
 # amount
-i_amount = int(np.ceil(shape[1] / 16))
-j_amount = int(np.ceil(shape[2] / step))
-k_amount = int(np.ceil(shape[3] / step))
+i_amount = np.ceil(shape[1] / config.NUM_PICS)
+j_amount = np.ceil(shape[2] / step)
+k_amount = np.ceil(shape[3] / step)
 
-for i in tqdm(range(0, i_amount), "Processing"):
-    for j in range(0, j_amount):
-        for k in range(0, k_amount):
+for i in tqdm(range(0, int(i_amount)), "Processing"):
+    for j in range(0, int(j_amount)):
+        for k in range(0, int(k_amount)):
             # a b c based on i j k
-            
-            if shape[1] - 16 * i < 16:
-                a = shape[1] - 16
-            else:
-                a = 16 * i
+            slice_tmp = image_init[:,
+                                   min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
+                                   min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
+                                   min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])]
 
-            if shape[2] - step * j < config.HEIGHT:
-                b = shape[2] - config.HEIGHT
-            else:
-                b = step * j
 
-            if shape[3] - step * k < config.WIDTH:
-                c = shape[3] - config.WIDTH
-            else:
-                c = step * k
-            # print(c)
-            # print(a, a + 16, "\n",b, b + config.HEIGHT, "\n", c, c + config.WIDTH)
-            slice_tmp = image_init[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH]
-            array_tmp = get_prediction(slice_tmp / 255, margin)[0]
+            array_tmp = get_prediction(slice_tmp, margin)[0]
+            # cv2.imshow(f"img", cv2.resize(slice_tmp[0][0], (512, 512)))
+            # cv2.imshow("pred", cv2.resize(array_tmp[0][0], (512, 512)))
+            # cv2.waitKey(0)
 
-            count_array[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH] = array_tmp
-            total_array[:, a : a + 16, b : b + config.HEIGHT, c: c + config.WIDTH] += 1
+            count_array[:,
+                        min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
+                        min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
+                        min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])] = array_tmp
+            total_array[:,
+                        min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
+                        min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
+                        min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])] = 1
 
-binary_array = calculate_binary_array(count_array, total_array)[0] * 255
+binary_array = calculate_binary_array(count_array, total_array)[0] 
 # Save the binary array as a .npy file
 if not os.path.exists("./processed_npy"):
     os.makedirs("./processed_npy")
