@@ -2,6 +2,7 @@ import numpy as np
 import os
 import torch
 import config
+import cv2
 
 from model_structures.model_structure_3d_1l import UNet3D
 from tqdm import tqdm
