@@ -2,17 +2,34 @@ import numpy as np
 import cv2
 import os
 import config
+import sys
 
 from tqdm import tqdm
 
-path_in = "./unprocessed_data/KESM/whole_volume_kesm.npy"
-path_out = "./unprocessed_data/KESM/ground_truth_kesm.npy"
+path_in = "./unprocessed_data/KESM/volume_input.npy"
+path_out = "./unprocessed_data/KESM/volume_ground_truth.npy"
 
 volume_in = np.load(path_in)
 volume_out = np.load(path_out)
 
 dataset_name = path_in.split("/")[-2]
 print("Dataset name:", dataset_name)
+
+if len(sys.argv) > 1:
+    print("Pseudo flat field correction")
+    # Initialize an array to store corrected images
+
+    corrected_images = np.empty_like(volume_in)
+
+    # Process each image
+    for i in range(volume_in.shape[0]):
+        # Apply Gaussian blur to simulate the background
+        blur_image = cv2.GaussianBlur(volume_in[i], (5, 5), 0) 
+        # Perform division
+        corrected_image = cv2.divide(volume_in[i], blur_image, scale=255)
+        
+        # Normalize to 0-255
+        corrected_images[i] = cv2.normalize(corrected_image, None, 0, 255, cv2.NORM_MINMAX)
 
 def find_bound_indices(arr):
     val_max = np.max(arr)
