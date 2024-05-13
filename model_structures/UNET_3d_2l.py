@@ -10,25 +10,25 @@ class UNet3D(nn.Module):
         
         # Encoder
         # Layer 1
-        self.enc_conv0 = nn.Sequential(nn.Conv3d(1, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16))
+        self.enc_conv0 = nn.Sequential(nn.Conv3d(1, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16), nn.Dropout3d(0.1))
         self.enc_conv1 = nn.Sequential(nn.Conv3d(16, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16))
         self.pool1 = nn.MaxPool3d(2)
         # Layer 2
-        self.enc_conv2 = nn.Sequential(nn.Conv3d(16, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32))
+        self.enc_conv2 = nn.Sequential(nn.Conv3d(16, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32), nn.Dropout3d(0.1))
         self.enc_conv3 = nn.Sequential(nn.Conv3d(32, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32))
         self.pool2 = nn.MaxPool3d(2)
         
-        self.enc_conv4 = nn.Sequential(nn.Conv3d(32, 64, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(64))
+        self.enc_conv4 = nn.Sequential(nn.Conv3d(32, 64, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(64), nn.Dropout3d(0.1))
         self.enc_conv5 = nn.Sequential(nn.Conv3d(64, 64, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(64))
         
         # Decoder
         # Layer 1
         self.up1 = nn.ConvTranspose3d(64, 32, 2, stride=2)
-        self.dec_conv0 = nn.Sequential(nn.Conv3d(64, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32))
+        self.dec_conv0 = nn.Sequential(nn.Conv3d(64, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32), nn.Dropout3d(0.1))
         self.dec_conv1 = nn.Sequential(nn.Conv3d(32, 32, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(32))
         # Layer 2
         self.up2 = nn.ConvTranspose3d(32, 16, 2, stride=2)
-        self.dec_conv2 = nn.Sequential(nn.Conv3d(32, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16))
+        self.dec_conv2 = nn.Sequential(nn.Conv3d(32, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16), nn.Dropout3d(0.1))
         self.dec_conv3 = nn.Sequential(nn.Conv3d(16, 16, 3, padding=1), nn.ReLU(), nn.BatchNorm3d(16))
 
         # Final layer
