@@ -49,7 +49,7 @@ class UNet3D(nn.Module):
                 nn.Conv3d(out_channels, out_channels, 3, padding=1),
                 nn.BatchNorm3d(out_channels),
                 nn.ReLU(),
-                nn.Dropout3d(0.2 - 0.05 * j),
+                nn.Dropout3d(max(0.2 - 0.05 * j, 0.1)),
                 nn.Conv3d(out_channels, out_channels, 3, padding=1),
                 nn.BatchNorm3d(out_channels),
                 nn.ReLU()
