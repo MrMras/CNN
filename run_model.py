@@ -4,15 +4,13 @@ import torch
 import config
 import cv2
 
-from model_structures.models_together import UNet3D
+from model_structures.UNET_3d_2l import UNet3D
 from tqdm import tqdm
 from copy import deepcopy as copy
 
 # Load the PyTorch model
-path_model = "./saved_models/KESM/model_for_vasc_3d_1l_2247062.pth"
-num = path_model.split("_")[-2][0]
-name = path_model.split("/")[-2]
-model = UNet3D(int(num))
+path_model = "./saved_models/KESM/model_for_vasc_3d_2l_5131073.pth"
+model = UNet3D()
 model.load_state_dict(torch.load(path_model, map_location="cpu"))
 
 # Set the model to evaluation mode
