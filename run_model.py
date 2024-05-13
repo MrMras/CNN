@@ -10,6 +10,7 @@ from copy import deepcopy as copy
 
 # Load the PyTorch model
 path_model = "./saved_models/KESM/model_for_vasc_3d_2l_5131073.pth"
+name = path_model.split("/")[-2]
 model = UNet3D()
 model.load_state_dict(torch.load(path_model, map_location="cpu"))
 
