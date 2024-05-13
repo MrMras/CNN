@@ -4,7 +4,7 @@ import torch
 import config
 import cv2
 
-from model_structures.model_structure_3d_1l import UNet3D
+from model_structures.models_together import UNet3D
 from tqdm import tqdm
 from copy import deepcopy as copy
 
