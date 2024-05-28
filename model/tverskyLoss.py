@@ -110,7 +110,7 @@ class FocalTverskyLoss(nn.Module):
     paper: https://arxiv.org/pdf/1810.07842.pdf
     author code: https://github.com/nabsabraham/focal-tversky-unet/blob/347d39117c24540400dfe80d106d2fb06d2b99e1/losses.py#L65
     """
-    def __init__(self, alpha, beta, gamma=0.75):
+    def __init__(self, alpha, beta, gamma=1.0):
         tversky_kwargs = {
             'apply_nonlin': None,
             'batch_dice': False,
