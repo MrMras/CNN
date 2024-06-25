@@ -52,7 +52,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}.")
 
 # Create the model
-model = UNet3D().to(device)
+model = UNet3D()
 print("Model created.")
 
 ratio = (np.sum(Y_train==0)+1) / (np.sum(Y_train==1) + 1)
