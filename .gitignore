@@ -21,3 +21,5 @@
 /image_folder
 /processed_npy
 /model_structures/__pycache__
+/model/negative_accuracy.txt
+/model/positive_accuracy.txt
