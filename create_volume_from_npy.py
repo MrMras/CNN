@@ -6,8 +6,8 @@ import sys
 
 from tqdm import tqdm
 
-path_in = "./unprocessed_data/KESM/volume_input.npy"
-path_out = "./unprocessed_data/KESM/volume_ground_truth.npy"
+path_in = "./unprocessed_data/LSM/volume_input.npy"
+path_out = "./unprocessed_data/LSM/volume_ground_truth.npy"
 
 volume_in = np.load(path_in)
 volume_out = np.load(path_out)
@@ -20,13 +20,16 @@ if len(sys.argv) > 1:
     # Initialize an array to store corrected images
 
     corrected_images = np.empty_like(volume_in)
-
+    if int(sys.argv[1]) == 0:
+        print("Gaussian Blur")
+    else:
+        print("Pseudo flat field correction")
     # Process each image
     for i in range(volume_in.shape[0]):
         # if arg = 0, gaussian
         # if arg = 1, pff
-        if int(sys.argv[1]) == 1:
-            print("Gaussian Blur")
+        
+        if int(sys.argv[1]) == 0:
             corrected_images[i] = cv2.GaussianBlur(volume_in[i], (5, 5), 0)
         else:
             print("Pseudo flat field correction")
@@ -38,7 +41,7 @@ if len(sys.argv) > 1:
             # Normalize to 0-255
             corrected_images[i] = cv2.normalize(corrected_image, None, 0, 255, cv2.NORM_MINMAX)
 else:
-    print("No pseudo flat field correction or gaussian, run with argument (0 or 1) to enable it")
+    print("No gaussian or pseudo flat field correction, run with argument (0 or 1) to enable it")
 def find_bound_indices(arr):
     val_max = np.max(arr)
     # Find indices where values are val_max along each axis
