@@ -16,7 +16,7 @@ dataset_name = path_in.split("/")[-2]
 print("Dataset name:", dataset_name)
 
 if len(sys.argv) > 1:
-    print("Pseudo flat field correction")
+    
     # Initialize an array to store corrected images
 
     corrected_images = np.empty_like(volume_in)
@@ -25,9 +25,11 @@ if len(sys.argv) > 1:
     for i in range(volume_in.shape[0]):
         # if arg = 0, gaussian
         # if arg = 1, pff
-        if int(sys.argv[1]) == 0:
+        if int(sys.argv[1]) == 1:
+            print("Gaussian Blur")
             corrected_images[i] = cv2.GaussianBlur(volume_in[i], (5, 5), 0)
         else:
+            print("Pseudo flat field correction")
             # Apply Gaussian blur to simulate the background
             blur_image = cv2.GaussianBlur(volume_in[i], (127, 127), 0)     
             # Perform division
