@@ -3,19 +3,17 @@ import os
 import torch
 import config
 import cv2
+import sys
 
 from model_structures.UNET_3d_2l import UNet3D
 from tqdm import tqdm
 from copy import deepcopy as copy
 
 # Load the PyTorch model
-path_model = "./saved_models/KESM/model_for_vasc_3d_2l_5131073.pth"
+path_model = "./saved_models/LSM/model_for_vasc_3d_2l_9436900.pth"
 name = path_model.split("/")[-2]
 model = UNet3D()
 model.load_state_dict(torch.load(path_model, map_location="cpu"))
-
-# pseudo flat field correction flag
-pff_flag = True
 
 # Set the model to evaluation mode
 model.eval()
@@ -49,21 +47,24 @@ def calculate_binary_array(count_array, total_array):
     return new_array
 
 # Create a nrrd file from a prediction based on the input directory
-image_array = np.load("./unprocessed_data/KESM/volume_input.npy")
+image_array = np.load("./unprocessed_data/LSM/volume_input.npy")
+if len(sys.argv) > 1:
+    if sys.argv[1] == "0":
+        blur_array = [cv2.GaussianBlur(image_array[i], (5, 5), 0) for i in range(image_array.shape[0])]
+        image_init = np.expand_dims(blur_array, axis=0)
+    else:
+        # Apply Pseudo flat field correction
+        blur_array = [cv2.GaussianBlur(image_array[i], (127, 127), 0) for i in range(image_array.shape[0])]
 
-if pff_flag:
-    # Apply Pseudo flat field correction
-    blur_array = [cv2.GaussianBlur(image_array[i], (127, 127), 0) for i in range(image_array.shape[0])]
+        image_pff_array = [cv2.divide(image_array[i], blur_array[i], scale=255) for i in range(image_array.shape[0])]
 
-    image_pff_array = [cv2.divide(image_array[i], blur_array[i], scale=255) for i in range(image_array.shape[0])]
+        # normalize
+        image_pff_array = (image_pff_array - np.min(image_pff_array)) / (np.max(image_pff_array) - np.min(image_pff_array))
 
-    # normalize
-    image_pff_array = (image_pff_array - np.min(image_pff_array)) / (np.max(image_pff_array) - np.min(image_pff_array))
-
-    image_init = np.expand_dims(image_pff_array, axis=0)
+        image_init = np.expand_dims(image_pff_array, axis=0)
 else:
     image_init = np.expand_dims(image_array, axis=0)
-    
+
 # Print the shape of the input and output arrays
 shape = image_init.shape
 print("Initial shape:", shape)
