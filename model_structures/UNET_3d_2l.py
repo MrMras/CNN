@@ -4,7 +4,7 @@ from torch import device, cuda
 
 class UNet3D(nn.Module):
     def __init__(self):
-        self.num_of_layers = 2
+        self.number_of_layers = 2
         super(UNet3D, self).__init__()
         self.device = device("cuda:0" if cuda.is_available() else "cpu")
         
