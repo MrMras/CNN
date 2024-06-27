@@ -10,7 +10,7 @@ from tqdm import tqdm
 from copy import deepcopy as copy
 
 # Load the PyTorch model
-path_model = "./saved_models/LSM/model_for_vasc_3d_2l_9436900.pth"
+path_model = "./saved_models/LSM/model_for_vasc_3d_2l_9071617.pth"
 name = path_model.split("/")[-2]
 model = UNet3D()
 model.load_state_dict(torch.load(path_model, map_location="cpu"))
@@ -39,12 +39,14 @@ def calculate_binary_array(count_array, total_array):
     mask = total_array == 0
     
     # Initialize binary_array with all zeros
+    probabilty_array = np.zeros_like(count_array)
     new_array = np.zeros_like(count_array)
     
     # Calculate binary_array where total_array is not zero
-    new_array[~mask] = (count_array[~mask] / total_array[~mask]) >= 0.5
+    probabilty_array[~mask] = count_array[~mask] / total_array[~mask]
+    new_array[~mask] = probabilty_array[~mask] >= 0.5
     
-    return new_array
+    return probabilty_array, new_array
 
 # Create a nrrd file from a prediction based on the input directory
 image_array = np.load("./unprocessed_data/LSM/volume_input.npy")
@@ -113,9 +115,12 @@ for i in tqdm(range(0, int(i_amount)), "Processing"):
                         min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
                         min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])] = 1
 
-binary_array = calculate_binary_array(count_array, total_array)[0] 
+probabilty_array, binary_array = calculate_binary_array(count_array, total_array)[0] 
 # Save the binary array as a .npy file
 if not os.path.exists("./processed_npy"):
     os.makedirs("./processed_npy")
+if not os.path.exists("./probability_npy"):
+    os.makedirs("./probability_npy")
 
 np.save(f"./processed_npy/{name}.npy", binary_array)
+np.save(f"./probability_npy/{name}.npy", probabilty_array)
