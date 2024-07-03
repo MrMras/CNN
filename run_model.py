@@ -115,7 +115,7 @@ for i in tqdm(range(0, int(i_amount)), "Processing"):
 cv2.destroyAllWindows()
 
 # Calculate the binary array
-binary_array = calculate_binary_array(count_array, total_array)[0]
+binary_array, probability_array = calculate_binary_array(count_array, total_array)[0]
 
 # Save the binary array as a .npy file
 if not os.path.exists("./processed_npy"):
@@ -124,4 +124,4 @@ if not os.path.exists("./probability_npy"):
     os.makedirs("./probability_npy")
 
 np.save(f"./processed_npy/{name}.npy", binary_array)
-np.save(f"./probability_npy/{name}.npy", probabilty_array)
+np.save(f"./probability_npy/{name}.npy", probability_array)
