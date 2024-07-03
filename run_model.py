@@ -5,14 +5,14 @@ import config
 import cv2
 import sys
 
-from model_structures.UNET_3d_2l import UNet3D
+from model_structures.models_together import UNet3D
 from tqdm import tqdm
 from copy import deepcopy as copy
 
 # Load the PyTorch model
-path_model = "./saved_models/LSM/model_for_vasc_3d_2l_9071617.pth"
+path_model = "./saved_models/LSM/model_for_vasc_3d_2l_2464848.pth"
 name = path_model.split("/")[-2]
-model = UNet3D()
+model = UNet3D(number_of_layers=2)
 model.load_state_dict(torch.load(path_model, map_location="cpu"))
 
 # Set the model to evaluation mode
@@ -48,6 +48,15 @@ def calculate_binary_array(count_array, total_array):
     
     return probabilty_array, new_array
 
+def calculate_slices(i, j, k, shape):
+    slices = (
+        slice(None),
+        slice(min(i * config.NUM_PICS, shape[1] - config.NUM_PICS), min((i + 1) * config.NUM_PICS, shape[1])),
+        slice(min(j * step, shape[2] - config.HEIGHT), min(j * step + config.HEIGHT, shape[2])),
+        slice(min(k * step, shape[3] - config.WIDTH), min(k * step + config.WIDTH, shape[3]))
+    )
+    return slices
+
 # Create a nrrd file from a prediction based on the input directory
 image_array = np.load("./unprocessed_data/LSM/volume_input.npy")
 if len(sys.argv) > 1:
@@ -66,6 +75,8 @@ if len(sys.argv) > 1:
         image_init = np.expand_dims(image_pff_array, axis=0)
 else:
     image_init = np.expand_dims(image_array, axis=0)
+# normalize
+image_init = (image_init - np.min(image_init)) / (np.max(image_init) - np.min(image_init))
 
 # Print the shape of the input and output arrays
 shape = image_init.shape
@@ -95,27 +106,17 @@ for i in tqdm(range(0, int(i_amount)), "Processing"):
     for j in range(0, int(j_amount)):
         for k in range(0, int(k_amount)):
             # a b c based on i j k
-            slice_tmp = image_init[:,
-                                   min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
-                                   min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
-                                   min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])]
-
-
+            slices = calculate_slices(i, j, k, shape)
+            slice_tmp = image_init[slices]
             array_tmp = get_prediction(slice_tmp, margin)[0]
-            # cv2.imshow(f"img", cv2.resize(slice_tmp[0][0], (512, 512)))
-            # cv2.imshow("pred", cv2.resize(array_tmp[0][0], (512, 512)))
-            # cv2.waitKey(0)
+            count_array[slices] = count_array[slices] + array_tmp
+            total_array[slices] += 1
 
-            count_array[:,
-                        min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
-                        min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
-                        min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])] = array_tmp
-            total_array[:,
-                        min(i * config.NUM_PICS, shape[1] - config.NUM_PICS) : min((i + 1) * config.NUM_PICS, shape[1]),
-                        min(j * step, shape[2] - config.HEIGHT) : min(j * step + config.HEIGHT, shape[2]),
-                        min(k * step, shape[3] - config.WIDTH) : min(k * step + config.WIDTH, shape[3])] = 1
+cv2.destroyAllWindows()
 
-probabilty_array, binary_array = calculate_binary_array(count_array, total_array)[0] 
+# Calculate the binary array
+binary_array = calculate_binary_array(count_array, total_array)[0]
+
 # Save the binary array as a .npy file
 if not os.path.exists("./processed_npy"):
     os.makedirs("./processed_npy")
