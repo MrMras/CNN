@@ -2,9 +2,9 @@ import numpy as np
 import os
 import torch
 import config
-import cv2
 import sys
 
+from scipy.ndimage import gaussian_filter
 from model_structures.models_together import UNet3D
 from tqdm import tqdm
 from copy import deepcopy as copy
@@ -61,13 +61,13 @@ def calculate_slices(i, j, k, shape):
 image_array = np.load("./unprocessed_data/LSM/volume_input.npy")
 if len(sys.argv) > 1:
     if sys.argv[1] == "0":
-        blur_array = [cv2.GaussianBlur(image_array[i], (5, 5), 0) for i in range(image_array.shape[0])]
+        blur_array = [gaussian_filter(image_array[i], sigma=1) for i in range(image_array.shape[0])]
         image_init = np.expand_dims(blur_array, axis=0)
     else:
         # Apply Pseudo flat field correction
-        blur_array = [cv2.GaussianBlur(image_array[i], (127, 127), 0) for i in range(image_array.shape[0])]
+        blur_array = [gaussian_filter(image_array[i], sigma=1) for i in range(image_array.shape[0])]
 
-        image_pff_array = [cv2.divide(image_array[i], blur_array[i], scale=255) for i in range(image_array.shape[0])]
+        image_pff_array = [np.floor(image_array[i] / blur_array[i] * 255) for i in range(image_array.shape[0])]
 
         # normalize
         image_pff_array = (image_pff_array - np.min(image_pff_array)) / (np.max(image_pff_array) - np.min(image_pff_array))
@@ -111,8 +111,6 @@ for i in tqdm(range(0, int(i_amount)), "Processing"):
             array_tmp = get_prediction(slice_tmp, margin)[0]
             count_array[slices] = count_array[slices] + array_tmp
             total_array[slices] += 1
-
-cv2.destroyAllWindows()
 
 # Calculate the binary array
 binary_array, probability_array = calculate_binary_array(count_array, total_array)[0]
