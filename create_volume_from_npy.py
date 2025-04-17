@@ -6,42 +6,6 @@ import sys
 
 from tqdm import tqdm
 
-path_in = "./unprocessed_data/LSM/volume_input.npy"
-path_out = "./unprocessed_data/LSM/volume_ground_truth.npy"
-
-volume_in = np.load(path_in)
-volume_out = np.load(path_out)
-
-dataset_name = path_in.split("/")[-2]
-print("Dataset name:", dataset_name)
-
-if len(sys.argv) > 1:
-    
-    # Initialize an array to store corrected images
-
-    corrected_images = np.empty_like(volume_in)
-    if int(sys.argv[1]) == 0:
-        print("Gaussian Blur")
-    else:
-        print("Pseudo flat field correction")
-    # Process each image
-    for i in range(volume_in.shape[0]):
-        # if arg = 0, gaussian
-        # if arg = 1, pff
-        
-        if int(sys.argv[1]) == 0:
-            corrected_images[i] = cv2.GaussianBlur(volume_in[i], (5, 5), 0)
-        else:
-            print("Pseudo flat field correction")
-            # Apply Gaussian blur to simulate the background
-            blur_image = cv2.GaussianBlur(volume_in[i], (127, 127), 0)     
-            # Perform division
-            corrected_image = cv2.divide(volume_in[i], blur_image, scale=255)
-            
-            # Normalize to 0-255
-            corrected_images[i] = cv2.normalize(corrected_image, None, 0, 255, cv2.NORM_MINMAX)
-else:
-    print("No gaussian or pseudo flat field correction, run with argument (0 or 1) to enable it")
 def find_bound_indices(arr):
     val_max = np.max(arr)
     # Find indices where values are val_max along each axis
@@ -56,49 +20,114 @@ def find_bound_indices(arr):
     
     return (x_min, x_max), (y_min, y_max), (z_min, z_max)
 
-# Cut out empty regions
-non_zero_indexes = find_bound_indices(volume_out)
-print("Non-zero indexes:", non_zero_indexes)
-volume_in = volume_in[
-    non_zero_indexes[0][0]:non_zero_indexes[0][1]+1,
-    non_zero_indexes[1][0]:non_zero_indexes[1][1]+1,
-    non_zero_indexes[2][0]:non_zero_indexes[2][1]+1
-    ]
+def preprocess_volume(path_in, path_out, correction_type = -1):
+    volume_in = np.load(path_in)
+    volume_out = np.load(path_out)
 
-volume_out = volume_out[
-    non_zero_indexes[0][0]:non_zero_indexes[0][1]+1,
-    non_zero_indexes[1][0]:non_zero_indexes[1][1]+1,
-    non_zero_indexes[2][0]:non_zero_indexes[2][1]+1
-    ]
-print("Cut out empty regions, shape:", volume_in.shape)
+    dataset_name = path_in.split("/")[-2]
+    print("Dataset name:", dataset_name)
 
-# Match the size of array to CNN
-NUMBER_OF_PICTURES_MOD = config.NUM_PICS
-CNN_SIZE_MOD = config.HEIGHT
+    if correction_type >= 0:
+        # Initialize an array to store corrected images
 
-volume_in = volume_in[
-    (non_zero_indexes[0][1]-non_zero_indexes[0][0]+1) % NUMBER_OF_PICTURES_MOD:,
-    (non_zero_indexes[1][1]-non_zero_indexes[1][0]+1) % CNN_SIZE_MOD:,
-    (non_zero_indexes[2][1]-non_zero_indexes[2][0]+1) % CNN_SIZE_MOD:
-    ]
+        corrected_images = np.empty_like(volume_in)
+        if correction_type == 0:
+            print("Gaussian Blur")
+        else:
+            print("Pseudo flat field correction")
+        # Process each image
+        for i in range(volume_in.shape[0]):
+            # if correction_type = 0, gaussian
+            # if correction_type = 1, pff
+            
+            if correction_type == 0:
+                corrected_images[i] = cv2.GaussianBlur(volume_in[i], (5, 5), 0)
+            else:
+                print("Pseudo flat field correction")
+                # Apply Gaussian blur to simulate the background
+                blur_image = cv2.GaussianBlur(volume_in[i], (127, 127), 0)     
+                # Perform division
+                corrected_image = cv2.divide(volume_in[i], blur_image, scale=255)
+                
+                # Normalize to 0-255
+                corrected_images[i] = cv2.normalize(corrected_image, None, 0, 255, cv2.NORM_MINMAX)
+    else:
+        print("No gaussian or pseudo flat field correction, run with argument (0 or 1) to enable it")
+    
 
-volume_out = volume_out[
-    (non_zero_indexes[0][1]-non_zero_indexes[0][0]+1) % NUMBER_OF_PICTURES_MOD:,
-    (non_zero_indexes[1][1]-non_zero_indexes[1][0]+1) % CNN_SIZE_MOD:,
-    (non_zero_indexes[2][1]-non_zero_indexes[2][0]+1) % CNN_SIZE_MOD:
-    ]
-print("Matched the size, shape:", volume_in.shape)
+    # Cut out empty regions
+    non_zero_indexes = find_bound_indices(volume_out)
+    print("Non-zero indexes:", non_zero_indexes)
+    volume_in = volume_in[
+        non_zero_indexes[0][0]:non_zero_indexes[0][1]+1,
+        non_zero_indexes[1][0]:non_zero_indexes[1][1]+1,
+        non_zero_indexes[2][0]:non_zero_indexes[2][1]+1
+        ]
 
-array_flatten_in = []
-array_flatten_out = []
-for i in range(volume_in.shape[0] // config.NUM_PICS):
-    for j in range(volume_in.shape[1] // config.HEIGHT):
-        for k in range(volume_in.shape[2] // config.WIDTH):
-            array_flatten_in.append(volume_in[i * config.NUM_PICS:(i + 1) * config.NUM_PICS, j * config.HEIGHT:(j + 1) * config.HEIGHT, k * config.WIDTH:(k + 1) * config.WIDTH])
-            array_flatten_out.append(volume_out[i * config.NUM_PICS:(i + 1) * config.NUM_PICS, j * config.HEIGHT:(j + 1) * config.HEIGHT, k * config.WIDTH:(k + 1) * config.WIDTH])
+    volume_out = volume_out[
+        non_zero_indexes[0][0]:non_zero_indexes[0][1]+1,
+        non_zero_indexes[1][0]:non_zero_indexes[1][1]+1,
+        non_zero_indexes[2][0]:non_zero_indexes[2][1]+1
+        ]
+    print("Cut out empty regions, shape:", volume_in.shape)
 
-array_flatten_in = np.array(array_flatten_in)
-array_flatten_out = np.array(array_flatten_out)
+    # Match the size of array to CNN
+    NUMBER_OF_PICTURES_MOD = config.NUM_PICS
+    CNN_SIZE_MOD = config.HEIGHT
+
+    volume_in = volume_in[
+        (non_zero_indexes[0][1]-non_zero_indexes[0][0]+1) % NUMBER_OF_PICTURES_MOD:,
+        (non_zero_indexes[1][1]-non_zero_indexes[1][0]+1) % CNN_SIZE_MOD:,
+        (non_zero_indexes[2][1]-non_zero_indexes[2][0]+1) % CNN_SIZE_MOD:
+        ]
+
+    volume_out = volume_out[
+        (non_zero_indexes[0][1]-non_zero_indexes[0][0]+1) % NUMBER_OF_PICTURES_MOD:,
+        (non_zero_indexes[1][1]-non_zero_indexes[1][0]+1) % CNN_SIZE_MOD:,
+        (non_zero_indexes[2][1]-non_zero_indexes[2][0]+1) % CNN_SIZE_MOD:
+        ]
+    print("Matched the size, shape:", volume_in.shape)
+
+    array_flatten_in = []
+    array_flatten_out = []
+    for i in range(volume_in.shape[0] // config.NUM_PICS):
+        for j in range(volume_in.shape[1] // config.HEIGHT):
+            for k in range(volume_in.shape[2] // config.WIDTH):
+                array_flatten_in.append(volume_in[i * config.NUM_PICS:(i + 1) * config.NUM_PICS, j * config.HEIGHT:(j + 1) * config.HEIGHT, k * config.WIDTH:(k + 1) * config.WIDTH])
+                array_flatten_out.append(volume_out[i * config.NUM_PICS:(i + 1) * config.NUM_PICS, j * config.HEIGHT:(j + 1) * config.HEIGHT, k * config.WIDTH:(k + 1) * config.WIDTH])
+
+    array_flatten_in = np.array(array_flatten_in)
+    array_flatten_out = np.array(array_flatten_out)
+    return array_flatten_in, array_flatten_out
+
+
+volume_paths = [
+    ("./unprocessed_data/LSM/volume_input.npy", "./unprocessed_data/LSM/volume_ground_truth.npy"),
+    ("./unprocessed_data/KESM/volume_input.npy", "./unprocessed_data/KESM/volume_ground_truth.npy")
+]
+
+# Combine name by different entries from volume_paths
+dataset_name = ""
+for path_in, path_out in volume_paths:
+    dataset_name += path_in.split("/")[-2] + "_"
+
+dataset_name = dataset_name[:-1]
+
+
+correction_type = int(sys.argv[1]) if len(sys.argv) > 1 else -1
+# no argument, or correction_type = -1, no correction
+# if correction_type = 0, gaussian
+# if correction_type = 1, pff
+
+all_in = []
+all_out = []
+for path_in, path_out in volume_paths:
+    chunk_in, chunk_out = preprocess_volume(path_in, path_out, correction_type)
+    all_in.append(chunk_in)
+    all_out.append(chunk_out)
+
+array_flatten_in = np.concatenate(all_in)
+array_flatten_out = np.concatenate(all_out)
 
 print(array_flatten_in.shape)
 print(array_flatten_out.shape)
