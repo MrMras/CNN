@@ -100,10 +100,14 @@ def preprocess_volume(path_in, path_out, correction_type = -1):
     array_flatten_out = np.array(array_flatten_out)
     return array_flatten_in, array_flatten_out
 
+# Example
+# volume_paths = [
+#     ("./unprocessed_data/LSM/volume_input.npy", "./unprocessed_data/LSM/volume_ground_truth.npy"), 
+#     ("./unprocessed_data/KESM/volume_input.npy", "./unprocessed_data/KESM/volume_ground_truth.npy")
+# ]
 
 volume_paths = [
-    ("./unprocessed_data/LSM/volume_input.npy", "./unprocessed_data/LSM/volume_ground_truth.npy"),
-    ("./unprocessed_data/KESM/volume_input.npy", "./unprocessed_data/KESM/volume_ground_truth.npy")
+    ("./unprocessed_data/LSM/volume_input.npy", "./unprocessed_data/LSM/volume_ground_truth.npy")
 ]
 
 # Combine name by different entries from volume_paths
